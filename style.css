@@ -425,7 +425,10 @@ img {
 .cell-peach { background: linear-gradient(135deg, #ffc49b, #ffab78); }
 .cell-num { position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 900; opacity: 0.6; }
 .cell-icon { font-size: 22px; margin-bottom: 16px; }
-.cell-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.cell-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; transform: translateY(-4px); }
+.cell-teal { background: linear-gradient(135deg, #5ddde0, #2fb8bd); }
+.cell-coral { background: linear-gradient(135deg, #ff9a8a, #ff6f5e); }
+.cell-olive { background: linear-gradient(135deg, #d5e37a, #b8cf4a); }
 
 .mid-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); gap: 16px; }
 .panel-box {
@@ -528,7 +531,7 @@ img {
 .team-name { font-size: 12px; font-weight: 800; color: #111; }
 .team-role { font-size: 10px; color: rgba(0,0,0,0.55); font-weight: 600; }
 .ad-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
-.ad-banner { background: white; border: 3px solid #e0d8d0; border-radius: 12px; padding: 16px 14px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 5px 12px rgba(0,0,0,0.05); min-height: 150px; }
+.ad-banner { background: white; border: 3px solid #e0d8d0; border-radius: 12px; padding: 16px 14px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 5px 12px rgba(0,0,0,0.05); min-height: 150px; text-decoration: none; color: inherit; }
 .ad-banner:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 14px rgba(0,0,0,0.08); }
 .ad-banner:hover { transform: scale(1.03); }
 .ad-banner:active { transform: scale(0.97); }
@@ -537,10 +540,9 @@ img {
 .social-icons { display: flex; gap: 8px; margin-top: 4px; }
 .social-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; transition: transform 0.15s; color: white; text-decoration: none; }
 .social-icon:hover { transform: scale(1.15); }
-.si-ig { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
-.si-tt { background: #000; }
-.si-tg { background: #0088cc; }
-.si-yt { background: #ff0000; }
+.si-ig { background: linear-gradient(135deg, #ff9fc9, #ff4f9a); }
+.si-tt { background: linear-gradient(135deg, #ff9fc9, #ff4f9a); }
+.si-tg { background: linear-gradient(135deg, #ff9fc9, #ff4f9a); }
 .write-btn { display: inline-flex; align-items: center; gap: 6px; background: #111; color: white; border: none; border-radius: 6px; padding: 8px 14px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-family: 'Inter', sans-serif; transition: transform 0.15s; box-shadow: 0 2px 0 #000; margin-top: 4px; }
 .write-btn:hover { transform: translateY(-1px); }
 .write-btn:active { transform: translateY(1px); box-shadow: none; }
