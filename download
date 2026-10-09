@@ -1,0 +1,5 @@
+node_modules/
+uploads/
+data.corrupt-*.json
+data.json.tmp
+.env
