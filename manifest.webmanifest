@@ -1,0 +1,20 @@
+{
+  "name": "Залізна Зміна",
+  "short_name": "Зміна",
+  "description": "Історії, заходи та спільнота Залізної Зміни",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fdf5ec",
+  "theme_color": "#b7001d",
+  "lang": "uk",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Заходи", "url": "/#section-events", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
