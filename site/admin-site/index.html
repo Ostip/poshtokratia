@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#161616" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Студія — Залізна Зміна</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23111'/%3E%3Ctext x='50' y='70' font-size='62' text-anchor='middle' fill='%23ffd93d' font-family='Arial' font-weight='900'%3EЗ%3C/text%3E%3C/svg%3E" />
+<style>
+*,*::before,*::after{box-sizing:border-box}*{margin:0;padding:0}
+:root{--red:#d0021b;--yellow:#ffd93d;--sky:#6ec6f5;--lav:#c9b8f5;--mint:#7de8c8;--pink:#f5a0c0;--peach:#ffc49b;--ink:#161210;--muted:#6b625b;--line:#e6d8c7;--bg:#f4ede2}
+body{font-family:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh}
+button{font-family:inherit}.hidden{display:none!important}
+.btn{background:var(--red);color:#fff;border:0;border-radius:10px;padding:11px 18px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #9a0014;transition:transform .12s}
+.btn:hover{transform:translateY(-1px)}.btn:active{transform:translateY(2px);box-shadow:none}.btn:disabled{opacity:.6;cursor:wait}
+.btn.dark{background:#111;box-shadow:0 3px 0 #000}.btn.ghost{background:#fff;color:#111;border:2px solid #111;box-shadow:none}.btn.small{padding:6px 11px;font-size:12px;box-shadow:none;border-radius:8px}
+.btn.danger{background:#fff;color:var(--red);border:2px solid var(--red);box-shadow:none}
+input,select,textarea{font:inherit;width:100%;border:2px solid #ddd;border-radius:10px;padding:10px 12px;background:#fff;color:#111;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0 4px rgba(208,2,27,.1)}
+label.lbl{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#555;margin:0 0 5px}
+.err{color:var(--red);font-weight:700;font-size:13px;margin-top:8px}.err:empty{display:none}
+
+/* логін */
+.login{min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 20% 10%,#ffe7c9,transparent 40%),var(--bg)}
+.login-card{background:#fff;border:3px solid var(--line);border-radius:22px;padding:34px;width:420px;max-width:100%;box-shadow:0 24px 60px rgba(60,30,10,.18);text-align:center}
+.login-card .logo{width:70px;height:70px;margin:0 auto 14px;background:var(--red);border-radius:20px;display:grid;place-items:center;color:var(--yellow);font-size:38px;font-weight:900;transform:rotate(-6deg);box-shadow:0 8px 0 #9a0014}
+.login-card h1{font-size:22px;margin-bottom:4px}.login-card p{color:var(--muted);margin-bottom:18px}
+.login-card form{display:flex;flex-direction:column;gap:12px;text-align:left}
+.back{display:block;margin-top:16px;font-size:12px;color:var(--muted);text-decoration:none}.back:hover{color:var(--red)}
+
+/* каркас */
+.top{background:#161616;color:#fff;padding:12px 22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:30;border-bottom:3px solid #000}
+.top .brand{font-weight:900;font-size:16px}.top .brand span{color:var(--yellow)}
+.tabs{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+.tab{background:#262626;color:#ddd;border:2px solid #3a3a3a;border-radius:9px;padding:7px 14px;font-weight:800;font-size:12.5px;cursor:pointer}
+.tab.active{background:var(--yellow);color:#111;border-color:var(--yellow)}
+.tab .n{background:var(--red);color:#fff;border-radius:99px;font-size:10px;padding:1px 6px;margin-left:5px}
+.wrap{max-width:1240px;margin:0 auto;padding:22px}
+.panel{display:none}.panel.active{display:block}
+.card{background:#fff;border:2px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 4px 14px rgba(60,30,10,.06)}
+h2{font-size:20px;margin-bottom:4px}.sub{color:var(--muted);margin-bottom:16px}
+
+/* студія */
+.studio{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:20px;align-items:start}.studio>*{min-width:0}
+.form{display:flex;flex-direction:column;gap:13px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+textarea.main{min-height:220px;resize:vertical;font-size:15px;line-height:1.55}
+.toolbar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;align-items:center}
+.tb{background:#fff;border:2px solid #e3d9ce;border-radius:8px;min-width:34px;height:34px;font-size:17px;cursor:pointer;padding:0 6px;font-weight:800}
+.tb:hover{border-color:#111;background:#fffbe8}.tb.txt{font-size:12px}
+.emoji-pop{background:#fff;border:2px solid #111;border-radius:12px;padding:10px;display:none;grid-template-columns:repeat(10,1fr);gap:2px;margin-bottom:8px;max-height:210px;overflow-y:auto;box-shadow:0 10px 24px rgba(0,0,0,.15)}
+.emoji-pop.open{display:grid}.emoji-pop button{border:0;background:none;font-size:22px;cursor:pointer;border-radius:6px;padding:3px}.emoji-pop button:hover{background:#ffeeb8}
+.cats{display:flex;flex-wrap:wrap;gap:6px}.cat{border:2px solid #e3d9ce;background:#fff;border-radius:99px;padding:6px 12px;font-weight:800;font-size:12px;cursor:pointer}
+.cat.on{border-color:#111;background:#111;color:#fff}
+.cover-drop{border:2px dashed #cdbfae;border-radius:12px;padding:12px;display:flex;gap:12px;align-items:center;background:#fafafa}
+.cover-drop img{width:90px;height:60px;object-fit:cover;border-radius:8px}
+.chk{display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer}.chk input{width:18px;height:18px;accent-color:var(--red)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.status-pick{display:inline-flex;background:#f1e9de;border-radius:99px;padding:3px}
+.status-pick button{border:0;background:none;border-radius:99px;padding:7px 14px;font-weight:800;font-size:12px;cursor:pointer;color:#6b625b}
+.status-pick button.on{background:#111;color:#fff}
+.draft-note{font-size:12px;color:var(--muted)}
+
+/* превʼю — ті самі квитки, що й на сайті */
+.preview-title{font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px;display:flex;justify-content:space-between}
+.ticket-wrap{filter:drop-shadow(0 8px 14px rgba(70,30,10,.18))}
+.ticket{--c:var(--sky);display:flex;background:#fff;border-radius:16px;overflow:hidden;
+ -webkit-mask:radial-gradient(circle 10px at 92px 0,transparent 97%,#000) top/100% 51% no-repeat,radial-gradient(circle 10px at 92px 100%,transparent 97%,#000) bottom/100% 51% no-repeat;
+ mask:radial-gradient(circle 10px at 92px 0,transparent 97%,#000) top/100% 51% no-repeat,radial-gradient(circle 10px at 92px 100%,transparent 97%,#000) bottom/100% 51% no-repeat}
+.ticket-stub{width:92px;flex-shrink:0;background:var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 6px;border-right:2px dashed rgba(0,0,0,.28)}
+.stub-dow{font-size:11px;font-weight:900;opacity:.7}.stub-day{font-size:32px;font-weight:900;line-height:1}.stub-mon{font-size:13px;font-weight:900;text-transform:uppercase}
+.stub-time{margin-top:8px;font-size:12px;font-weight:900;background:rgba(255,255,255,.55);padding:2px 8px;border-radius:99px}
+.ticket-main{flex:1;min-width:0}.ticket-cover{height:120px}.ticket-cover img{width:100%;height:100%;object-fit:cover}
+.ticket-body{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.ticket-cat{background:var(--c);border-radius:99px;padding:2px 10px;font-size:11px;font-weight:900;align-self:flex-start;border:2px solid rgba(0,0,0,.15)}
+.ticket-title{font-size:16px;font-weight:800;line-height:1.25;word-break:break-word}.ticket-meta{font-size:12.5px;font-weight:700;color:var(--muted)}
+.ticket-text{font-size:13.5px;color:#3e3731;word-break:break-word}.ticket-text a{color:var(--red)}
+.pill{display:inline-block;border-radius:99px;padding:2px 9px;font-size:10.5px;font-weight:900;text-transform:uppercase;background:#111;color:var(--yellow)}.pill.draft{background:#e6dccd;color:#6b625b}.pill.pin{background:var(--red);color:#fff}
+
+/* список */
+.list{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.item{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:14px;padding:10px 12px}
+.item .thumb{width:62px;height:62px;border-radius:10px;object-fit:cover;background:#eee;flex-shrink:0;display:grid;place-items:center;font-size:26px}
+.item .info{flex:1;min-width:0}.item .t{font-weight:800;word-break:break-word}.item .m{font-size:12px;color:var(--muted);word-break:break-word}
+.item .btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px;text-align:center}.stat b{display:block;font-size:30px;color:var(--red);line-height:1.1}.stat span{font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase}
+.subtabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.subtabs .tab{background:#fff;color:#333;border-color:#ddd}.subtabs .tab.active{background:#111;color:#fff;border-color:#111}
+.empty{padding:26px;text-align:center;color:var(--muted);border:2px dashed var(--line);border-radius:14px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 20px;border-radius:99px;font-weight:700;z-index:100;box-shadow:0 12px 28px rgba(0,0,0,.3);animation:up .3s}
+.toast.bad{background:var(--red)}.toast.good{background:#0f7a3d}
+@keyframes up{from{opacity:0;transform:translate(-50%,16px)}}
+@media(max-width:900px){.studio{grid-template-columns:1fr}.row2{grid-template-columns:1fr}.item{flex-wrap:wrap}.item .btns{width:100%;justify-content:flex-start}.ticket-stub{width:78px}}
+
+/* ── смартфони: студія працює з телефона ── */
+body{-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+button,a,input,select,textarea,summary,label{touch-action:manipulation}
+@media(pointer:coarse){input,select,textarea{font-size:16px}.tb{min-width:42px;height:42px}.btn.small{padding:9px 13px}.cat{padding:9px 14px}}
+@media(max-width:900px){
+ .top{padding:calc(10px + env(safe-area-inset-top)) 12px 10px;gap:8px;position:sticky}
+ .top .brand{font-size:14px;flex:1 1 100%}
+ .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1 1 100%;order:3;padding-bottom:2px}
+ .tabs::-webkit-scrollbar{display:none}.tab{white-space:nowrap;min-height:42px}
+ .top>a.btn,.top>#logout{order:2}.top .brand{order:1}
+ .wrap{padding:12px 12px calc(96px + env(safe-area-inset-bottom))}
+ .card{padding:14px;border-radius:14px}
+ .studio{gap:14px;grid-template-columns:minmax(0,1fr)}.studio>*{min-width:0}.studio>div:last-child{position:static!important;order:-1}
+ .row2{grid-template-columns:minmax(0,1fr)}.card,.form>*,.item .info{min-width:0}
+ .toolbar,.emoji-pop,.cats{max-width:100%}
+ .preview-title{margin-top:2px}
+ textarea.main{min-height:200px}
+ .emoji-pop{grid-template-columns:repeat(8,1fr);max-height:240px}.emoji-pop button{font-size:26px;padding:6px 2px}
+ .toolbar{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}.toolbar::-webkit-scrollbar{display:none}.tb{flex-shrink:0}
+ .cover-drop{flex-wrap:wrap}
+ .actions{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:2px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -8px 20px rgba(0,0,0,.1);margin:0}
+ .actions .btn{flex:1;min-height:48px}
+ .item{align-items:flex-start}.item .btns{gap:8px}.item .btns .btn{flex:1 1 auto}
+ .toast{bottom:calc(88px + env(safe-area-inset-bottom));max-width:92vw;text-align:center}
+ .login-card{padding:24px 18px}
+}
+</style>
+</head>
+<body>
+
+<div class="login" id="login">
+  <div class="login-card">
+    <div class="logo">З</div>
+    <h1>Студія Залізної Зміни</h1>
+    <p>Тут ти додаєш заходи — і вони одразу зʼявляються на сайті.</p>
+    <form id="login-form">
+      <div><label class="lbl" for="key">Ключ адміністратора</label><input id="key" type="password" autocomplete="current-password" placeholder="Твій ключ (ADMIN_PASSWORD)" autofocus></div>
+      <button class="btn" type="submit" id="login-btn">Увійти в студію →</button>
+      <div class="err" id="login-err" role="alert"></div>
+    </form>
+    <a class="back" href="#" data-site>← Повернутись на сайт</a>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="brand">Залізна <span>Зміна</span> · студія</div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="events">🎟 Заходи</button>
+      <button class="tab" data-tab="moderation">🛡 Модерація</button>
+      <button class="tab" data-tab="people">👥 Люди <span class="n" id="n-people">0</span></button>
+      <button class="tab" data-tab="overview">📊 Огляд</button>
+    </div>
+    <a class="btn small ghost" href="#" data-site target="_blank" rel="noopener">Відкрити сайт ↗</a>
+    <button class="btn small dark" id="logout">Вийти</button>
+  </header>
+
+  <div class="wrap">
+    <!-- ═══ ЗАХОДИ ═══ -->
+    <section class="panel active" id="p-events">
+      <div class="studio">
+        <div class="card">
+          <h2 id="form-title">Новий захід</h2>
+          <p class="sub">Встав текст просто зі смайликами — так, як написав би в Telegram. Він зʼявиться на сайті у розділі «Заходи».</p>
+          <form class="form" id="ev-form" novalidate>
+            <div>
+              <label class="lbl">Текст про захід</label>
+              <div class="toolbar" id="toolbar">
+                <button type="button" class="tb" data-emoji-toggle title="Усі смайлики">😀</button>
+                <button type="button" class="tb" data-ins="🎉">🎉</button><button type="button" class="tb" data-ins="🔥">🔥</button>
+                <button type="button" class="tb" data-ins="📍">📍</button><button type="button" class="tb" data-ins="🕒">🕒</button>
+                <button type="button" class="tb" data-ins="💛">💛</button><button type="button" class="tb" data-ins="✨">✨</button>
+                <button type="button" class="tb" data-ins="🎟">🎟</button><button type="button" class="tb" data-ins="✅">✅</button>
+                <button type="button" class="tb txt" data-wrap="**" title="Жирний">B</button>
+                <button type="button" class="tb txt" data-ins="&#10;• " title="Пункт списку">• список</button>
+              </div>
+              <div class="emoji-pop" id="emoji-pop"></div>
+              <textarea class="main" id="f-text" maxlength="6000" placeholder="🎉 Квіз-вечір!&#10;&#10;📍 Де: кав'ярня «Пошта»&#10;🕒 Коли: у п'ятницю о 18:00&#10;&#10;Приходь з друзями — буде весело 💛"></textarea>
+              <div class="draft-note"><span id="cnt">0</span> / 6000 · чернетка зберігається автоматично</div>
+            </div>
+            <div><label class="lbl" for="f-title">Назва (необовʼязково — візьму з першого рядка)</label><input id="f-title" maxlength="120" placeholder="Напр. Квіз-вечір 🧠"></div>
+            <div><label class="lbl">Категорія</label><div class="cats" id="cats"></div></div>
+            <div class="row2">
+              <div><label class="lbl" for="f-date">Дата й час</label><input id="f-date" type="datetime-local"></div>
+              <div><label class="lbl" for="f-place">Місце</label><input id="f-place" maxlength="120" placeholder="Львів, вул. Прикладна, 1"></div>
+            </div>
+            <div class="chk"><input type="checkbox" id="f-alldate"><label for="f-alldate" style="cursor:pointer">Без точного часу (показати лише дату)</label></div>
+            <div><label class="lbl" for="f-link">Посилання (реєстрація / деталі)</label><input id="f-link" type="url" maxlength="300" placeholder="https://…"></div>
+            <div>
+              <label class="lbl">Обкладинка</label>
+              <div class="cover-drop"><img id="cover-img" class="hidden" alt=""><div style="flex:1"><input type="file" id="f-cover" accept="image/*"></div><button type="button" class="btn small danger hidden" id="cover-del">Прибрати</button></div>
+            </div>
+            <div class="chk"><input type="checkbox" id="f-pinned"><label for="f-pinned" style="cursor:pointer">📌 Закріпити зверху</label></div>
+            <div>
+              <label class="lbl">Статус</label>
+              <div class="status-pick" id="status-pick"><button type="button" data-st="published" class="on">✅ Опублікувати</button><button type="button" data-st="draft">📝 Чернетка</button></div>
+            </div>
+            <div class="err" id="ev-err" role="alert"></div>
+            <div class="actions">
+              <button class="btn" type="submit" id="ev-save">Опублікувати на сайті</button>
+              <button class="btn ghost" type="button" id="ev-reset">Очистити форму</button>
+            </div>
+          </form>
+        </div>
+
+        <div style="position:sticky;top:78px">
+          <div class="preview-title"><span>👁 Так це побачать на сайті</span></div>
+          <div id="preview"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:26px">
+        <h2>Усі заходи</h2><p class="sub">Редагуй, ховай у чернетки, дублюй або видаляй.</p>
+        <div class="list" id="ev-list"></div>
+      </div>
+    </section>
+
+    <!-- ═══ МОДЕРАЦІЯ ═══ -->
+    <section class="panel" id="p-moderation">
+      <h2>Модерація</h2><p class="sub">Видаляй те, що порушує правила спільноти.</p>
+      <div class="subtabs" id="modtabs"><button class="tab active" data-mod="cards">Історії</button><button class="tab" data-mod="letters">Листи</button><button class="tab" data-mod="memes">Меми</button></div>
+      <div class="list" id="mod-list"></div>
+    </section>
+
+    <!-- ═══ ЛЮДИ ═══ -->
+    <section class="panel" id="p-people">
+      <h2>Зареєстровані люди</h2><p class="sub">Приватна інформація — бачиш лише ти.</p>
+      <div class="list" id="people-list"></div>
+    </section>
+
+    <!-- ═══ ОГЛЯД ═══ -->
+    <section class="panel" id="p-overview">
+      <h2>Огляд</h2><p class="sub">Що зараз відбувається на сайті.</p>
+      <div class="stats" id="stats"></div>
+    </section>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  // Адреса ОСНОВНОГО сайту (де живе база й API). Змінюється у файлі config.js
+  const API = String(window.ZZ_API || 'https://poshtokratia.onrender.com').replace(/\/+$/, '');
+  const safeSrc = (u) => (typeof u === 'string' && u.startsWith('/uploads/')) ? API + u : '';
+  const CATS = {
+    meetup: ['🤝', 'Зустріч', 'var(--sky)'], workshop: ['🛠', 'Майстер-клас', 'var(--lav)'], party: ['🎉', 'Івент', 'var(--pink)'],
+    charity: ['💛', 'Волонтерство', 'var(--yellow)'], online: ['💻', 'Онлайн', 'var(--mint)'], other: ['✨', 'Інше', 'var(--peach)'],
+  };
+  const MON = ['січ', 'лют', 'бер', 'кві', 'тра', 'чер', 'лип', 'сер', 'вер', 'жов', 'лис', 'гру'];
+  const DOW = ['НД', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+  const EMOJI = '😀 😁 😂 🤣 😊 😍 🥰 😎 🤩 🥳 😇 🙂 😉 😌 🤗 🤔 😴 😅 😭 🥹 🙌 👏 🙏 💪 👍 👋 🤝 ✌️ 🤞 👀 💛 ❤️ 🧡 💚 💙 💜 🖤 🤍 💖 💫 ✨ 🌟 ⭐ 🔥 🎉 🎊 🎈 🎁 🎤 🎧 🎶 🎸 🎬 🎮 🎯 🎨 📚 📖 ✍️ 📝 📸 📷 🎟 🎫 🏆 🥇 📍 🗺 🏠 🏛 ☕ 🍕 🍰 🍿 🥂 🍻 🌈 ☀️ 🌙 🌸 🌿 🍀 🕒 ⏰ 📅 🗓 ⏳ ✅ ❗ ❓ ➡️ ⬇️ 👉 🇺🇦 💻 📱 🔔 📢 🎓 🛠 🤖 🧠 🕊 🌻'.split(' ');
+
+  let KEY = sessionStorage.getItem('zz-admin-key') || '';
+  const S = { data: null, editId: null, status: 'published', cat: 'meetup', cover: undefined, coverUrl: null, mod: 'cards' };
+
+  function toast(msg, type = '') {
+    const t = document.createElement('div'); t.className = 'toast ' + type; t.textContent = msg; document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+  async function api(path, { method = 'GET', body } = {}) {
+    let res;
+    try {
+      res = await fetch(API + '/api' + path, { method, headers: { 'X-Admin-Password': KEY, ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) }, body: body !== undefined ? JSON.stringify(body) : undefined });
+    } catch (e) {
+      throw new Error("Немає зв'язку з основним сайтом. Перевір, що він запущений, а в його налаштуваннях Render задано ADMIN_ORIGIN = адреса цієї студії.");
+    }
+    let d = {}; try { d = await res.json(); } catch (e) { /* ignore */ }
+    if (!res.ok || d.success === false) { const er = new Error(d.error || 'Помилка'); er.status = res.status; throw er; }
+    return d;
+  }
+
+  /* ── текст: той самий безпечний форматер, що й на сайті ── */
+  function rich(text) {
+    let h = esc(text);
+    h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    h = h.replace(/https?:\/\/(?:(?!&quot;|&#39;|&lt;|&gt;)\S)+/g, (m) => {
+      const tail = (m.match(/[.,;:!?)\]]+$/) || [''])[0]; const url = tail ? m.slice(0, -tail.length) : m;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${tail}`;
+    });
+    return h.replace(/\n/g, '<br>');
+  }
+
+  /* ── вхід ── */
+  async function enter(key, showErr) {
+    KEY = key;
+    const slow = setTimeout(() => { if (showErr) $('#login-err').textContent = '⏳ Основний сайт прокидається (безкоштовний хостинг) — зачекай до хвилини…'; }, 4000);
+    try {
+      await api('/admin/ping');
+      sessionStorage.setItem('zz-admin-key', key);
+      $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+      await reload(); restoreDraft(); renderPreview();
+      return true;
+    } catch (e) {
+      sessionStorage.removeItem('zz-admin-key'); KEY = '';
+      if (showErr) $('#login-err').textContent = e.message;
+      return false;
+    } finally { clearTimeout(slow); }
+  }
+  $('#login-form').addEventListener('submit', async (e) => {
+    e.preventDefault(); const k = $('#key').value; if (!k) { $('#login-err').textContent = 'Введи ключ'; return; }
+    $('#login-err').textContent = ''; const b = $('#login-btn'); b.disabled = true;
+    await enter(k, true); b.disabled = false;
+  });
+  $('#logout').addEventListener('click', () => { sessionStorage.removeItem('zz-admin-key'); location.reload(); });
+
+  /* ── вкладки ── */
+  $$('.top .tab').forEach((t) => t.addEventListener('click', () => {
+    $$('.top .tab').forEach((x) => x.classList.toggle('active', x === t));
+    $$('.panel').forEach((p) => p.classList.toggle('active', p.id === 'p-' + t.dataset.tab));
+  }));
+  $$('#modtabs .tab').forEach((t) => t.addEventListener('click', () => {
+    S.mod = t.dataset.mod; $$('#modtabs .tab').forEach((x) => x.classList.toggle('active', x === t)); renderMod();
+  }));
+
+  async function reload() {
+    S.data = await api('/admin/content');
+    renderList(); renderMod(); renderPeople(); renderOverview();
+  }
+
+  /* ── редактор ── */
+  const f = { text: $('#f-text'), title: $('#f-title'), date: $('#f-date'), place: $('#f-place'), link: $('#f-link'), pinned: $('#f-pinned'), all: $('#f-alldate') };
+  $('#cats').innerHTML = Object.entries(CATS).map(([k, v]) => `<button type="button" class="cat" data-cat="${k}">${v[0]} ${v[1]}</button>`).join('');
+  $('#emoji-pop').innerHTML = EMOJI.map((e) => `<button type="button" data-ins="${e}">${e}</button>`).join('');
+
+  function insertAtCursor(str) {
+    const t = f.text; const s = t.selectionStart; const e = t.selectionEnd;
+    t.value = t.value.slice(0, s) + str + t.value.slice(e); t.focus(); t.selectionStart = t.selectionEnd = s + str.length; onChange();
+  }
+  function wrapSel(mark) {
+    const t = f.text; const s = t.selectionStart; const e = t.selectionEnd; const sel = t.value.slice(s, e) || 'текст';
+    t.value = t.value.slice(0, s) + mark + sel + mark + t.value.slice(e); t.focus(); t.selectionStart = s + mark.length; t.selectionEnd = s + mark.length + sel.length; onChange();
+  }
+  document.addEventListener('click', (e) => {
+    const ins = e.target.closest('[data-ins]'); if (ins) { e.preventDefault(); insertAtCursor(ins.dataset.ins); return; }
+    const wr = e.target.closest('[data-wrap]'); if (wr) { e.preventDefault(); wrapSel(wr.dataset.wrap); return; }
+    if (e.target.closest('[data-emoji-toggle]')) { $('#emoji-pop').classList.toggle('open'); return; }
+    const cat = e.target.closest('[data-cat]'); if (cat) { S.cat = cat.dataset.cat; syncCats(); onChange(); return; }
+    const st = e.target.closest('[data-st]'); if (st) { S.status = st.dataset.st; syncStatus(); onChange(); }
+  });
+  function syncCats() { $$('#cats .cat').forEach((c) => c.classList.toggle('on', c.dataset.cat === S.cat)); }
+  function syncStatus() {
+    $$('#status-pick button').forEach((b) => b.classList.toggle('on', b.dataset.st === S.status));
+    $('#ev-save').textContent = S.status === 'draft' ? 'Зберегти чернетку' : (S.editId ? 'Зберегти зміни на сайті' : 'Опублікувати на сайті');
+  }
+
+  function firstLine(text) {
+    const l = (text.split('\n').map((x) => x.trim()).find(Boolean) || '').replace(/\*\*/g, '');
+    return l.length > 100 ? l.slice(0, 97) + '…' : l;
+  }
+  function eventFromForm() {
+    let date = f.date.value;
+    if (date && f.all.checked) date = date.slice(0, 10);
+    return { title: f.title.value.trim() || firstLine(f.text.value), text: f.text.value, category: S.cat, date, place: f.place.value.trim(), link: f.link.value.trim(), pinned: f.pinned.checked, status: S.status };
+  }
+
+  function ticketHTML(e, coverSrc) {
+    const [em, label, color] = CATS[e.category] || CATS.other;
+    let stub = '<span class="stub-day" style="font-size:26px">✨</span><span class="stub-mon">скоро</span>';
+    if (e.date) {
+      const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(e.date); const d = new Date(dateOnly ? e.date + 'T00:00' : e.date);
+      if (!Number.isNaN(d.getTime())) stub = `<span class="stub-dow">${DOW[d.getDay()]}</span><span class="stub-day">${d.getDate()}</span><span class="stub-mon">${MON[d.getMonth()]}</span>${dateOnly ? '' : `<span class="stub-time">${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}</span>`}`;
+    }
+    return `<div class="ticket-wrap"><div class="ticket" style="--c:${color}"><div class="ticket-stub">${stub}</div><div class="ticket-main">
+      ${coverSrc ? `<div class="ticket-cover"><img src="${esc(coverSrc)}" alt=""></div>` : ''}
+      <div class="ticket-body"><span class="ticket-cat">${em} ${label}</span>
+        <div class="ticket-title">${esc(e.title || 'Назва зʼявиться тут')}</div>
+        <div class="ticket-meta">${e.place ? '📍 ' + esc(e.place) : ''}</div>
+        <div class="ticket-text">${rich(e.text || 'Текст про захід зʼявиться тут…')}</div></div></div></div></div>`;
+  }
+  function renderPreview() {
+    const e = eventFromForm();
+    const cover = S.cover ? S.cover : S.coverUrl;
+    $('#preview').innerHTML = ticketHTML(e, cover);
+    $('#cnt').textContent = f.text.value.length;
+    const img = $('#cover-img'); img.classList.toggle('hidden', !cover); if (cover) img.src = cover; $('#cover-del').classList.toggle('hidden', !cover);
+  }
+  function saveDraft() {
+    if (S.editId) return;
+    const e = eventFromForm();
+    try { localStorage.setItem('zz-admin-draft', JSON.stringify({ ...e, rawDate: f.date.value, all: f.all.checked, rawTitle: f.title.value })); } catch (er) { /* ignore */ }
+  }
+  function restoreDraft() {
+    try {
+      const d = JSON.parse(localStorage.getItem('zz-admin-draft') || 'null'); if (!d || S.editId) { syncCats(); syncStatus(); return; }
+      f.text.value = d.text || ''; f.title.value = d.rawTitle || ''; f.date.value = d.rawDate || ''; f.place.value = d.place || ''; f.link.value = d.link || '';
+      f.pinned.checked = !!d.pinned; f.all.checked = !!d.all; S.cat = d.category || 'meetup'; S.status = d.status || 'published';
+    } catch (e) { /* ignore */ }
+    syncCats(); syncStatus();
+  }
+  const onChange = () => { renderPreview(); saveDraft(); };
+  [f.text, f.title, f.date, f.place, f.link, f.pinned, f.all].forEach((el) => { el.addEventListener('input', onChange); el.addEventListener('change', onChange); });
+
+  function resetForm(clearDraft = true) {
+    S.editId = null; S.cover = undefined; S.coverUrl = null; S.cat = 'meetup'; S.status = 'published';
+    Object.values(f).forEach((el) => { if (el.type === 'checkbox') el.checked = false; else el.value = ''; });
+    $('#f-cover').value = ''; $('#form-title').textContent = 'Новий захід'; $('#ev-err').textContent = '';
+    if (clearDraft) { try { localStorage.removeItem('zz-admin-draft'); } catch (e) { /* ignore */ } }
+    syncCats(); syncStatus(); renderPreview();
+  }
+  $('#ev-reset').addEventListener('click', () => resetForm());
+
+  function compress(file, maxDim = 1400, q = 0.84) {
+    return new Promise((resolve, reject) => {
+      if (!file || !/^image\//.test(file.type)) { reject(new Error('Це не зображення')); return; }
+      const url = URL.createObjectURL(file); const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, maxDim / Math.max(img.width, img.height)); const w = Math.round(img.width * k); const h = Math.round(img.height * k);
+        const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', q));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Не вдалося прочитати фото')); };
+      img.src = url;
+    });
+  }
+  $('#f-cover').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    try { S.cover = await compress(file); renderPreview(); } catch (er) { toast(er.message, 'bad'); }
+  });
+  $('#cover-del').addEventListener('click', () => { S.cover = null; S.coverUrl = null; $('#f-cover').value = ''; renderPreview(); });
+
+  $('#ev-form').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const data = eventFromForm();
+    if (!f.text.value.trim()) { $('#ev-err').textContent = 'Напиши текст про захід'; f.text.focus(); return; }
+    if (data.title.length < 2) { $('#ev-err').textContent = 'Додай назву'; f.title.focus(); return; }
+    if (data.link && !/^https?:\/\//i.test(data.link)) { $('#ev-err').textContent = 'Посилання має починатися з https://'; f.link.focus(); return; }
+    if (S.cover !== undefined) data.cover = S.cover;
+    $('#ev-err').textContent = ''; const btn = $('#ev-save'); btn.disabled = true;
+    try {
+      if (S.editId) await api('/admin/events/' + S.editId, { method: 'PUT', body: data });
+      else await api('/admin/events', { method: 'POST', body: data });
+      toast(data.status === 'draft' ? 'Чернетку збережено 📝' : (S.editId ? 'Зміни збережено — вони вже на сайті ✅' : 'Опубліковано! Захід уже на сайті 🎉'), 'good');
+      resetForm(); await reload();
+      window.scrollTo({ top: document.body.scrollHeight / 3, behavior: 'smooth' });
+    } catch (er) { $('#ev-err').textContent = er.message; }
+    btn.disabled = false;
+  });
+
+  /* ── список заходів ── */
+  function fmt(e) {
+    if (!e.date) return 'без дати';
+    const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(e.date); const d = new Date(dateOnly ? e.date + 'T00:00' : e.date);
+    if (Number.isNaN(d.getTime())) return e.date;
+    return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' }) + (dateOnly ? '' : ', ' + d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' }));
+  }
+  function renderList() {
+    const list = S.data.events; const box = $('#ev-list');
+    if (!list.length) { box.innerHTML = '<div class="empty">Заходів ще немає. Створи перший зліва 👆</div>'; return; }
+    box.innerHTML = list.map((e) => {
+      const [em, label] = CATS[e.category] || CATS.other;
+      return `<div class="item">${safeSrc(e.cover) ? `<img class="thumb" src="${esc(safeSrc(e.cover))}" alt="">` : `<div class="thumb">${em}</div>`}
+        <div class="info"><div class="t">${esc(e.title)} ${e.status === 'draft' ? '<span class="pill draft">чернетка</span>' : ''}${e.pinned ? ' <span class="pill pin">📌</span>' : ''}</div>
+          <div class="m">${em} ${label} · ${esc(fmt(e))}${e.place ? ' · 📍 ' + esc(e.place) : ''} · 👥 ${e.going}</div></div>
+        <div class="btns"><button class="btn small ghost" data-edit="${esc(e.id)}">✎ Редагувати</button>
+          <button class="btn small ghost" data-toggle="${esc(e.id)}">${e.status === 'draft' ? '✅ Опублікувати' : '📝 Сховати'}</button>
+          <button class="btn small ghost" data-dup="${esc(e.id)}">⧉ Дублювати</button>
+          <button class="btn small danger" data-del="${esc(e.id)}">🗑</button></div></div>`;
+    }).join('');
+  }
+  function fillForm(e, asCopy) {
+    S.editId = asCopy ? null : e.id; S.cat = e.category; S.status = asCopy ? 'draft' : e.status; S.cover = undefined; S.coverUrl = asCopy ? null : safeSrc(e.cover) || null;
+    f.text.value = e.text; f.title.value = e.title + (asCopy ? ' (копія)' : ''); f.place.value = e.place || ''; f.link.value = e.link || ''; f.pinned.checked = !!e.pinned;
+    const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(e.date || ''); f.all.checked = dateOnly; f.date.value = e.date ? (dateOnly ? e.date + 'T00:00' : e.date) : '';
+    $('#form-title').textContent = asCopy ? 'Копія заходу' : 'Редагування заходу';
+    syncCats(); syncStatus(); renderPreview(); window.scrollTo({ top: 0, behavior: 'smooth' }); f.text.focus();
+  }
+  $('#ev-list').addEventListener('click', async (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const id = b.dataset.edit || b.dataset.toggle || b.dataset.dup || b.dataset.del; const ev = S.data.events.find((x) => x.id === id); if (!ev) return;
+    try {
+      if (b.dataset.edit) fillForm(ev, false);
+      else if (b.dataset.dup) fillForm(ev, true);
+      else if (b.dataset.toggle) {
+        await api('/admin/events/' + id, { method: 'PUT', body: { title: ev.title, text: ev.text, category: ev.category, date: ev.date, place: ev.place, link: ev.link, pinned: ev.pinned, status: ev.status === 'draft' ? 'published' : 'draft' } });
+        toast(ev.status === 'draft' ? 'Опубліковано ✅' : 'Сховано в чернетки 📝', 'good'); await reload();
+      } else if (b.dataset.del) {
+        if (!confirm(`Видалити захід «${ev.title}»? Дію не можна скасувати.`)) return;
+        await api('/admin/events/' + id, { method: 'DELETE' }); toast('Видалено', 'good'); if (S.editId === id) resetForm(); await reload();
+      }
+    } catch (er) { toast(er.message, 'bad'); }
+  });
+
+  /* ── модерація / люди / огляд ── */
+  async function del(path, label) {
+    if (!confirm(label)) return;
+    try { await api(path, { method: 'DELETE' }); toast('Видалено', 'good'); await reload(); } catch (er) { toast(er.message, 'bad'); }
+  }
+  function renderMod() {
+    const k = S.mod; const items = S.data[k]; const box = $('#mod-list');
+    if (!items.length) { box.innerHTML = '<div class="empty">Тут поки порожньо</div>'; return; }
+    box.innerHTML = items.map((x) => {
+      const title = k === 'cards' ? x.name : k === 'letters' ? `${x.author} → ${x.recipient}` : x.title;
+      const body = k === 'cards' ? x.story : k === 'letters' ? x.message : x.text;
+      return `<div class="item">${safeSrc(x.photo) ? `<img class="thumb" src="${esc(safeSrc(x.photo))}" alt="">` : `<div class="thumb">${k === 'letters' ? '✉️' : k === 'memes' ? '😂' : '📖'}</div>`}
+        <div class="info"><div class="t">${esc(title)}${x.author && x.author.username ? ` <span class="m">@${esc(x.author.username)}</span>` : ''}</div><div class="m">${esc(x.date)} ${x.likes !== undefined ? '· ♥ ' + x.likes : ''}</div><div class="m" style="color:#333;margin-top:3px">${esc(String(body).slice(0, 240))}</div></div>
+        <div class="btns"><button class="btn small danger" data-k="${k}" data-id="${esc(x.id)}">🗑 Видалити</button></div></div>`;
+    }).join('');
+  }
+  $('#mod-list').addEventListener('click', (e) => { const b = e.target.closest('button[data-id]'); if (b) del(`/${b.dataset.k}/${b.dataset.id}`, 'Видалити цей запис назавжди?'); });
+  function renderPeople() {
+    const users = S.data.users; $('#n-people').textContent = users.length;
+    $('#people-list').innerHTML = users.length ? users.map((u) => `<div class="item"><div class="thumb">${safeSrc(u.avatar) ? `<img class="thumb" src="${esc(safeSrc(u.avatar))}" alt="">` : esc(([...u.name][0] || '?').toUpperCase())}</div>
+      <div class="info"><div class="t">${esc(u.name)} <span class="m">@${esc(u.username)}</span></div><div class="m">${esc(u.email)} · ${esc(isNaN(Date.parse(u.createdAt)) ? u.createdAt : new Date(u.createdAt).toLocaleDateString('uk-UA'))} · ${u.stories} історій, ${u.memes} мемів</div></div>
+      <div class="btns"><button class="btn small danger" data-user="${esc(u.id)}" data-name="${esc(u.name)}">🗑 Видалити</button></div></div>`).join('') : '<div class="empty">Ще ніхто не зареєструвався</div>';
+  }
+  $('#people-list').addEventListener('click', (e) => { const b = e.target.closest('button[data-user]'); if (b) del('/admin/users/' + b.dataset.user, `Видалити користувача «${b.dataset.name}» разом з усіма його історіями й мемами?`); });
+  function renderOverview() {
+    const d = S.data; const pub = d.events.filter((e) => e.status === 'published').length; const going = d.events.reduce((s, e) => s + e.going, 0);
+    $('#stats').innerHTML = [['👥', d.users.length, 'людей'], ['📖', d.cards.length, 'історій'], ['✉️', d.letters.length, 'листів'], ['😂', d.memes.length, 'мемів'], ['🎟', pub, 'заходів на сайті'], ['📝', d.events.length - pub, 'чернеток'], ['🙋', going, 'відміток «Піду»']]
+      .map((s) => `<div class="stat">${s[0]}<b>${s[1]}</b><span>${s[2]}</span></div>`).join('');
+  }
+
+  $$('a[data-site]').forEach((a) => { a.href = API; });
+
+  /* ── автовхід ── */
+  if (KEY) enter(KEY, false).then((ok) => { if (!ok) $('#key').focus(); });
+})();
+</script>
+</body>
+</html>
