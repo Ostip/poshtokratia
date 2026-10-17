@@ -1,0 +1,16 @@
+{
+  "name": "zalizna-zmina",
+  "version": "2.1.0",
+  "private": true,
+  "description": "Сайт Залізної Зміни: акаунти, історії, листи, меми та заходи",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "pg": "^8.13.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
