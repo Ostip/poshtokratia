@@ -16,6 +16,13 @@
   const hue = (str) => { let h = 0; for (const ch of String(str || '')) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
   const safeSrc = (u) => (typeof u === 'string' && (u.startsWith('/uploads/') || /^(assets\/|[\w.-]+\.(png|jpe?g|webp|gif|svg)$)/i.test(u))) ? u : '';
   const safeUrl = (u) => (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : '';
+  const telegramUrl = (u) => {
+    try {
+      const parsed = new URL(u);
+      return parsed.protocol === 'https:' && parsed.hostname === 't.me' && !parsed.port &&
+        /^\/(?:[A-Za-z0-9_]{5,32}\/\d+|c\/\d+\/\d+)$/.test(parsed.pathname) ? parsed.href : '';
+    } catch (e) { return ''; }
+  };
   const buzz = (ms = 12) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* ignore */ } };
   const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 
@@ -96,7 +103,7 @@
 
   /* ───────────── стан ───────────── */
   const S = {
-    me: null, cards: [], letters: [], memes: [], events: [],
+    me: null, cards: [], letters: [], memes: [], events: [], telegramPosts: [], telegramTotal: 0, telegramConfigured: false,
     stats: { people: 0, stories: 0, letters: 0, memes: 0, events: 0 },
     shown: { cards: 8, letters: 6, memes: 6 },
     eventFilter: 'upcoming', photos: { story: null, meme: null },
@@ -262,6 +269,7 @@
     if (area) {
       area.innerHTML = S.me
         ? `<button class="nav-user" data-action="profile" aria-label="Мій профіль">${avatar(S.me, 'sm')}<span>${esc(S.me.name.split(' ')[0])}</span></button>
+           <button class="nav-btn notification-btn" data-action="notifications" aria-label="Сповіщення${S.me.unreadNotifications ? `, нових: ${S.me.unreadNotifications}` : ''}">🔔<span class="notification-count"${S.me.unreadNotifications ? '' : ' hidden'}>${S.me.unreadNotifications > 9 ? '9+' : S.me.unreadNotifications || ''}</span></button>
            <button class="nav-btn nav-btn-auth" data-action="logout">Вийти</button>`
         : `<button class="nav-btn nav-btn-auth" data-action="login">Увійти <span class="indicator ind-green"></span></button>
            <button class="nav-btn nav-btn-auth" data-action="register">Реєстрація <span class="indicator ind-yellow"></span></button>`;
@@ -344,6 +352,39 @@
     }
     const next = nextEvent();
     grid.innerHTML = list.map((e, i) => ticketHTML(e, i, next && next.id)).join('');
+  }
+
+  function renderTelegramPosts() {
+    const grid = $('#telegram-posts'); if (!grid) return;
+    if (!S.loaded) { grid.innerHTML = skeletons(3); return; }
+    if (S.loadError && !S.telegramConfigured && !S.telegramPosts.length) {
+      grid.innerHTML = retryBlock;
+      $('#telegram-more').hidden = true;
+      return;
+    }
+    if (!S.telegramPosts.length) {
+      grid.innerHTML = `<div class="telegram-empty">${S.telegramConfigured
+        ? 'У каналі поки немає дописів для показу.'
+        : 'Підключення каналу ще не активне. Адміністратор має налаштувати інтеграцію в Render.'}</div>`;
+      $('#telegram-more').hidden = true;
+      return;
+    }
+    grid.innerHTML = S.telegramPosts.map((post) => {
+      const image = safeSrc(post.photo);
+      const link = telegramUrl(post.link);
+      const date = new Date(post.createdAt);
+      const formattedDate = Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('uk-UA', { dateStyle: 'medium' }).format(date);
+      return `<article class="telegram-card">
+        ${image ? `<img class="telegram-photo" src="${esc(image)}" alt="" loading="lazy">` : ''}
+        <div class="telegram-content"><div class="telegram-date">${esc(formattedDate)}</div>
+          <p>${esc(post.message).replace(/\n/g, '<br>')}</p>
+          ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Оригінал у Telegram ↗</a>` : ''}
+        </div>
+      </article>`;
+    }).join('');
+    const more = $('#telegram-more');
+    more.hidden = S.telegramPosts.length >= S.telegramTotal;
+    more.textContent = `Показати ще (${Math.max(S.telegramTotal - S.telegramPosts.length, 0)})`;
   }
 
   function renderHeroNext() {
@@ -437,22 +478,52 @@
   }
 
   function renderAll() {
-    renderAuth(); renderStats(); renderEvents(); renderPeople(); renderCards(); renderLetters(); renderMemes();
+    renderAuth(); renderStats(); renderEvents(); renderTelegramPosts(); renderPeople(); renderCards(); renderLetters(); renderMemes();
   }
 
   /* ───────────── завантаження даних ───────────── */
   async function loadMe() {
     try { S.me = (await api('/me')).user; } catch (e) { S.me = null; }
   }
+  async function refreshNotificationCount() {
+    if (!S.me) return;
+    try {
+      const { user } = await api('/me');
+      if (!S.me) return;
+      if (!user) { S.me = null; renderAuth(); return; }
+      if (S.me.unreadNotifications !== user.unreadNotifications) {
+        S.me.unreadNotifications = user.unreadNotifications;
+        renderAuth();
+      }
+    } catch (e) {
+      if (!e.network && e.status !== 401) console.error('Не вдалося оновити сповіщення:', e.message);
+    }
+  }
   async function loadData() {
-    const [st, ev, pp] = await Promise.all([api('/state'), api('/events'), api('/people').catch(() => ({ people: [] }))]);
+    const [st, ev, pp, tg] = await Promise.all([api('/state'), api('/events'), api('/people').catch(() => ({ people: [] })), api('/telegram')]);
     S.cards = st.cards; S.letters = st.letters; S.memes = st.memes; S.stats = st.stats; S.events = ev.events; S.people = pp.people;
+    S.telegramPosts = tg.posts; S.telegramTotal = tg.total; S.telegramConfigured = tg.configured;
+  }
+  async function loadMoreTelegram(btn) {
+    if (btn.disabled || S.telegramPosts.length >= S.telegramTotal) return;
+    btn.disabled = true;
+    try {
+      const { posts, total, configured } = await api(`/telegram?offset=${S.telegramPosts.length}&limit=12`);
+      const known = new Set(S.telegramPosts.map((post) => post.id));
+      S.telegramPosts.push(...posts.filter((post) => !known.has(post.id)));
+      S.telegramTotal = total; S.telegramConfigured = configured;
+      renderTelegramPosts();
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
   }
   async function refreshData({ silent = false } = {}) {
     try {
       await loadData();
       S.loadError = false;
-      const sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.me && S.me.username, S.me && S.me.following]);
+      const sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.telegramPosts, S.telegramConfigured, S.me && S.me.username, S.me && S.me.following]);
       if (silent && sig === S.sig) return;
       S.sig = sig;
       renderAll();
@@ -473,7 +544,7 @@
     clearTimeout(slow);
     $('#net-banner').classList.remove('show');
     S.loaded = true;
-    S.sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.me && S.me.username, S.me && S.me.following]);
+    S.sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.telegramPosts, S.telegramConfigured, S.me && S.me.username, S.me && S.me.following]);
     renderAll();
     if (S.loadError) toast('Не вдалося завантажити дані сайту', 'error');
     setTimeout(() => document.body.classList.add('ready'), 1400);
@@ -731,6 +802,28 @@
     } catch (e) { closeModal(); toast(e.message, 'error'); }
   }
 
+  async function openNotifications() {
+    if (!S.me) { authModal('login'); return; }
+    S.modal = { type: 'notifications' };
+    openModal('<div class="spinner"></div>');
+    try {
+      const d = await api('/notifications');
+      if (!S.modal || S.modal.type !== 'notifications') return;
+      if (d.unread) await api('/notifications/read', { method: 'PATCH', body: {} });
+      S.me.unreadNotifications = 0;
+      renderAuth();
+      const rows = d.notifications.map((n) => {
+        const date = new Date(n.createdAt);
+        const when = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' });
+        return `<button type="button" class="notification-item${n.readAt ? '' : ' unread'}" data-action="user" data-username="${esc(n.actor.username)}">
+          ${avatar(n.actor, 'md')}<span><b>${esc(n.actor.name)}</b> підписався(лась) на тебе${when ? `<small>${esc(when)}</small>` : ''}</span><span class="notification-arrow">›</span>
+        </button>`;
+      }).join('');
+      openModal(`<div class="modal-title">Сповіщення</div>${rows || '<div class="empty-state">Поки немає нових сповіщень.</div>'}`);
+      S.modal = { type: 'notifications' };
+    } catch (e) { closeModal(); toast(e.message, 'error'); }
+  }
+
   async function follow(btn) {
     if (!S.me) { toast('Увійди, щоб підписуватись 🔔'); authModal('login'); return; }
     const username = btn.dataset.username;
@@ -965,6 +1058,7 @@
       S.me = null; closeModal(); await refreshData(); renderAuth(); toast('Ти вийшов з акаунта. До зустрічі! 👋');
     },
     profile: () => openProfile(),
+    notifications: () => openNotifications(),
     user: (_, el) => openUser(el.dataset.username),
     story: (_, el) => openStory(el.dataset.id),
     meme: (_, el) => openMeme(el.dataset.id),
@@ -1020,6 +1114,7 @@
       $$('#story-filters .chip').forEach((c) => c.classList.toggle('active', c.dataset.action === 'sfilter:' + f)); renderCards();
     },
     install: () => installApp(),
+    'telegram-more': (_, el) => loadMoreTelegram(el),
     reload: () => bootstrap(),
   };
 
@@ -1189,5 +1284,8 @@
   bootstrap();
   setInterval(() => { if (!document.hidden && S.loaded) { renderEvents(); } }, 60 * 1000);          // оновлюємо відлік «через N днів»
   setInterval(() => { if (!document.hidden && S.loaded) refreshData({ silent: true }); }, 45 * 1000); // нові заходи зʼявляються без перезавантаження
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.loaded) refreshData({ silent: true }); });
+  setInterval(() => { if (!document.hidden && S.loaded) refreshNotificationCount(); }, 45 * 1000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && S.loaded) { refreshData({ silent: true }); refreshNotificationCount(); }
+  });
 })();

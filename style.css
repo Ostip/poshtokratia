@@ -141,6 +141,15 @@ a { color: inherit; }
   border-radius: 99px; padding: 3px 14px 3px 4px; cursor: pointer; font-weight: 800; font-size: 12px; transition: background .15s;
 }
 .nav-user:hover { background: rgba(255,255,255,.16); }
+.notification-btn { position: relative; min-width: 42px; justify-content: center; }
+.notification-count { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px; display: grid; place-items: center; border: 2px solid #171717; border-radius: 99px; background: var(--red); color: #fff; font-size: 10px; line-height: 1; }
+.notification-count[hidden] { display: none; }
+.notification-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+.notification-item + .notification-item { margin-top: 8px; }
+.notification-item.unread { background: #fff9df; border-color: #e8d8a1; }
+.notification-item > span:nth-child(2) { flex: 1; }
+.notification-item small { display: block; color: var(--muted); font-size: 11px; }
+.notification-arrow { font-size: 24px; color: var(--muted); }
 .nav-burger { display: none; width: 40px; height: 36px; background: #2a2a2a; border: 2px solid #4a4a4a; border-radius: 8px; cursor: pointer; flex-direction: column; justify-content: center; align-items: center; gap: 4px; }
 .nav-burger span { width: 18px; height: 2px; background: #fff; border-radius: 2px; transition: transform .2s, opacity .2s; }
 .top-nav.nav-open .nav-burger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
@@ -242,6 +251,15 @@ a { color: inherit; }
 
 /* ═══════════════ ЗАХОДИ (квитки) ═══════════════ */
 .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+.telegram-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.telegram-card { min-width: 0; overflow: hidden; background: #fff; border: 2px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-sm); }
+.telegram-photo { display: block; width: 100%; max-height: 320px; object-fit: cover; background: #eee; }
+.telegram-content { padding: 14px 16px; }
+.telegram-date { color: var(--muted); font-size: 11px; font-weight: 800; margin-bottom: 7px; }
+.telegram-content p { margin: 0; line-height: 1.55; overflow-wrap: anywhere; }
+.telegram-content a { display: inline-block; margin-top: 12px; color: var(--red); font-size: 12px; font-weight: 800; }
+.telegram-empty { grid-column: 1 / -1; padding: 28px 20px; border: 2px dashed var(--line); border-radius: 14px; text-align: center; color: var(--muted); background: rgba(255,255,255,.55); }
+.telegram-channel-link { display: inline-block; text-decoration: none; }
 .ticket-wrap { filter: drop-shadow(0 8px 14px rgba(70, 30, 10, .18)); transition: transform .25s, filter .25s; animation: popIn .55s both; animation-delay: calc(var(--i, 0) * 70ms); }
 .ticket-wrap:hover { transform: translateY(-5px) rotate(-.4deg); filter: drop-shadow(0 16px 22px rgba(70, 30, 10, .26)); }
 .ticket {
@@ -642,6 +660,7 @@ body.kb-open .bottom-nav { display: none; }
   .panel-box, .panel-section { padding: 16px; border-radius: 16px; border-width: 2px; }
   .steps { flex-direction: column; }
   .events-grid { grid-template-columns: 1fr; gap: 14px; }
+  .telegram-channel-link { min-height: 44px; display: inline-flex; align-items: center; }
   .chips { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; -webkit-overflow-scrolling: touch; max-width: 100%; padding: 2px; margin: -2px; }
   .chips::-webkit-scrollbar { display: none; }
   .chip { white-space: nowrap; flex-shrink: 0; }

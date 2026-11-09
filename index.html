@@ -64,6 +64,7 @@
           <button class="nav-btn nav-btn-events" data-action="go:section-events" data-nav="section-events"><span class="indicator ind-red"></span> Заходи <span class="nav-badge" id="nav-events-badge" hidden>0</span></button>
           <button class="nav-btn" data-action="go:section-komirka" data-nav="section-komirka"><span class="indicator ind-blue"></span> Історії</button>
           <button class="nav-btn" data-action="go:section-mail" data-nav="section-mail"><span class="indicator ind-green"></span> Пошта</button>
+          <button class="nav-btn" data-action="go:section-telegram" data-nav="section-telegram"><span class="indicator ind-blue"></span> Telegram</button>
           <button class="nav-btn" data-action="go:section-memes" data-nav="section-memes"><span class="indicator ind-pink"></span> Меми</button>
           <button class="nav-btn" data-action="go:section-komanda" data-nav="section-komanda"><span class="indicator ind-lavender"></span> Команда</button>
         </div>
@@ -130,6 +131,19 @@
             </div>
           </div>
           <div class="events-grid" id="events-grid"></div>
+        </section>
+
+        <section class="section reveal" id="section-telegram">
+          <div class="section-head">
+            <div>
+              <div class="eyebrow">✈️ Оновлення спільноти</div>
+              <h2 class="section-title">З Telegram</h2>
+              <p class="section-sub">Публікації з каналу Poshtokratia з’являються тут після підключення інтеграції.</p>
+            </div>
+            <a class="ghost-btn telegram-channel-link" href="https://t.me/poshtokratia" target="_blank" rel="noopener noreferrer">Відкрити канал ↗</a>
+          </div>
+          <div class="telegram-grid" id="telegram-posts" aria-live="polite"></div>
+          <button class="ghost-btn more-btn" id="telegram-more" data-action="telegram-more" hidden>Показати ще</button>
         </section>
 
         <!-- ═══ MID ROW ═══ -->
@@ -379,6 +393,7 @@
   <button data-action="go:section-events" data-nav="section-events"><span class="bn-ic">🎟<i class="bn-dot" id="bn-events-dot" hidden></i></span><span class="bn-t">Заходи</span></button>
   <button data-action="go:section-komirka" data-nav="section-komirka"><span class="bn-ic">📖</span><span class="bn-t">Історії</span></button>
   <button data-action="go:section-mail" data-nav="section-mail"><span class="bn-ic">✉️</span><span class="bn-t">Пошта</span></button>
+  <button data-action="go:section-telegram" data-nav="section-telegram"><span class="bn-ic">✈️</span><span class="bn-t">Канал</span></button>
   <button data-action="go:section-memes" data-nav="section-memes"><span class="bn-ic">😂</span><span class="bn-t">Меми</span></button>
   <button data-action="profile" id="bn-profile"><span class="bn-ic">👤</span><span class="bn-t">Увійти</span></button>
 </nav>

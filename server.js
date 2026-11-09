@@ -38,6 +38,13 @@ const ADMIN_ORIGINS = String(process.env.ADMIN_ORIGIN || '').split(',').map((x) 
 // ADMIN_PAGE=off — вимкнути сторінку /admin на основному сайті (студія живе лише на окремій адресі)
 const ADMIN_PAGE_OFF = String(process.env.ADMIN_PAGE || '').toLowerCase() === 'off';
 const MAX_BODY = 9 * 1024 * 1024; // 9 МБ (фото приходять стиснутими з браузера)
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET || '';
+const TELEGRAM_CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID || '';
+const TELEGRAM_WEBHOOK_URL = process.env.TELEGRAM_WEBHOOK_URL || '';
+const TELEGRAM_IMAGE_MAX_BYTES = 2 * 1024 * 1024;
+const TELEGRAM_POST_LIMIT = 100;
+let telegramWebhookReady = false;
 const EVENT_CATEGORIES = ['meetup', 'workshop', 'party', 'charity', 'online', 'other'];
 const RESERVED_USERNAMES = new Set(['admin', 'administrator', 'root', 'api', 'system', 'support', 'moderator',
   'poshtokratia', 'zalizna', 'zmina', 'uploads', 'null', 'undefined', 'me']);
@@ -132,11 +139,58 @@ function removeImage(url) {
   if (pool) pool.query(SQL_IMG_DEL, [name]).catch((err) => console.error('⚠️  Не вдалося видалити фото з бази:', err.message));
 }
 
+async function telegramPhoto(fileId) {
+  const fileResponse = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ file_id: fileId }),
+    signal: AbortSignal.timeout(15000),
+  }).catch(() => { throw new Error('Не вдалося отримати фото з Telegram'); });
+  if (!fileResponse.ok) throw new Error('Telegram не повернув файл фото');
+  const fileResult = await fileResponse.json().catch(() => null);
+  const file = fileResult && fileResult.ok && fileResult.result;
+  if (!file || typeof file.file_path !== 'string' || !/^[A-Za-z0-9_./-]{1,256}$/.test(file.file_path) || file.file_path.split('/').includes('..')) {
+    throw new Error('Telegram повернув некоректний шлях до фото');
+  }
+  if (Number(file.file_size) > TELEGRAM_IMAGE_MAX_BYTES) return null;
+
+  const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${file.file_path.split('/').map(encodeURIComponent).join('/')}`;
+  const response = await fetch(fileUrl, { signal: AbortSignal.timeout(20000), redirect: 'error' })
+    .catch(() => { throw new Error('Не вдалося завантажити фото з Telegram'); });
+  if (!response.ok || !response.body) throw new Error('Не вдалося завантажити фото з Telegram');
+  const declaredSize = Number(response.headers.get('content-length'));
+  if (declaredSize > TELEGRAM_IMAGE_MAX_BYTES) {
+    await response.body.cancel();
+    return null;
+  }
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let size = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.length;
+    if (size > TELEGRAM_IMAGE_MAX_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(Buffer.from(value));
+  }
+  const image = Buffer.concat(chunks);
+  const mime = image[0] === 0xff && image[1] === 0xd8 && image[2] === 0xff ? 'image/jpeg'
+    : image[0] === 0x89 && image[1] === 0x50 && image[2] === 0x4e && image[3] === 0x47 ? 'image/png'
+      : image.slice(0, 4).toString() === 'RIFF' && image.slice(8, 12).toString() === 'WEBP' ? 'image/webp'
+        : image.slice(0, 3).toString() === 'GIF' ? 'image/gif' : '';
+  if (!mime) return null;
+  return storeImage(`data:${mime};base64,${image.toString('base64')}`, TELEGRAM_IMAGE_MAX_BYTES);
+}
+
 // ───────────────────────── Сховище даних ─────────────────────────
 let db;
 
 function emptyDb() {
-  return { meta: { secret: '', version: 2 }, users: [], cards: [], letters: [], memes: [], events: [], follows: [], reports: [] };
+  return { meta: { secret: '', version: 2 }, users: [], cards: [], letters: [], memes: [], events: [], follows: [], reports: [], notifications: [], telegramPosts: [] };
 }
 
 // ── SQL (прості запити; таблиці створюються автоматично при старті)
@@ -152,7 +206,7 @@ const MIME_BY_EXT = { '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image
 function normalizeRaw(raw) {
   db = emptyDb();
   if (raw && typeof raw === 'object') {
-    for (const k of ['users', 'cards', 'letters', 'memes', 'events', 'follows', 'reports']) if (Array.isArray(raw[k])) db[k] = raw[k];
+    for (const k of ['users', 'cards', 'letters', 'memes', 'events', 'follows', 'reports', 'notifications', 'telegramPosts']) if (Array.isArray(raw[k])) db[k] = raw[k];
     if (raw.meta && typeof raw.meta === 'object') db.meta = { ...db.meta, ...raw.meta };
   }
 }
@@ -318,6 +372,28 @@ function migrate() {
     report.resolvedAt = report.status === 'resolved' ? (report.resolvedAt || report.createdAt) : null;
     report.resolution = report.status === 'resolved' && ['removed', 'retained'].includes(report.resolution) ? report.resolution : null;
   }
+  db.notifications = db.notifications.filter((notification) => notification && typeof notification === 'object' && !Array.isArray(notification));
+  for (const notification of db.notifications) {
+    notification.id = String(notification.id || newId());
+    notification.userId = String(notification.userId || '');
+    notification.actorId = String(notification.actorId || '');
+    notification.type = 'follow';
+    notification.createdAt = notification.createdAt || nowIso();
+    notification.readAt = notification.readAt || null;
+  }
+  db.notifications = db.notifications.filter((notification) =>
+    db.users.some((u) => u.id === notification.userId) && db.users.some((u) => u.id === notification.actorId));
+  db.telegramPosts = db.telegramPosts.filter((post) => post && typeof post === 'object' && !Array.isArray(post));
+  for (const post of db.telegramPosts) {
+    post.id = String(post.id || newId());
+    post.chatId = String(post.chatId || '');
+    post.messageId = Number(post.messageId) || 0;
+    post.message = typeof post.message === 'string' ? post.message.slice(0, 4096) : '';
+    post.photo = typeof post.photo === 'string' && /^\/uploads\/[a-f0-9]+\.(jpg|png|webp|gif)$/.test(post.photo) ? post.photo : null;
+    post.link = typeof post.link === 'string' && /^https:\/\/t\.me\//.test(post.link) ? post.link : '';
+    post.createdAt = post.createdAt || nowIso();
+  }
+  db.telegramPosts = db.telegramPosts.filter((post) => post.chatId && post.messageId > 0);
   db.follows = db.follows.filter((f) => f && f.from && f.to && f.from !== f.to);
   for (const e of db.events) {
     e.id = String(e.id || newId());
@@ -425,6 +501,7 @@ const meUser = (u) => ({
   ...pubUser(u), email: u.email,
   following: followingOf(u.id).map((f) => userById(f.to)).filter(Boolean).map((x) => x.username),
   followers: followersOf(u.id).length,
+  unreadNotifications: db.notifications.filter((n) => n.userId === u.id && !n.readAt).length,
 });
 
 function viewCard(c, viewer) {
@@ -466,6 +543,7 @@ function removeUserTraces(user) {
   }
   db.letters = db.letters.filter((l) => l.userId !== user.id);
   db.follows = db.follows.filter((f) => f.from !== user.id && f.to !== user.id);
+  db.notifications = db.notifications.filter((n) => n.userId !== user.id && n.actorId !== user.id);
   for (const e of db.events) e.going = e.going.filter((x) => x !== user.id);
   removeImage(user.avatar);
   db.users = db.users.filter((u) => u.id !== user.id);
@@ -493,6 +571,71 @@ route('GET', '/api/state', (ctx) => {
     memes: db.memes.slice(0, 200).map((m) => viewMeme(m, v)),
     stats: { people: db.users.length, stories: db.cards.length, letters: db.letters.length, memes: db.memes.length, events: published },
   };
+});
+
+route('GET', '/api/telegram', (ctx) => {
+  const parsedOffset = Number.parseInt(ctx.url.searchParams.get('offset') || '0', 10);
+  const parsedLimit = Number.parseInt(ctx.url.searchParams.get('limit') || '12', 10);
+  const offset = Number.isSafeInteger(parsedOffset) && parsedOffset > 0 ? Math.min(parsedOffset, db.telegramPosts.length) : 0;
+  const limitCount = Number.isSafeInteger(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 50) : 12;
+  const posts = [...db.telegramPosts].sort((a, b) => b.messageId - a.messageId);
+  return {
+    success: true,
+    configured: telegramWebhookReady,
+    total: posts.length,
+    posts: posts.slice(offset, offset + limitCount).map(({ id, message, photo, link, createdAt }) => ({ id, message, photo, link, createdAt })),
+  };
+});
+
+route('POST', '/api/telegram/webhook', async (ctx) => {
+  const update = ctx.body;
+  const message = update.channel_post || update.edited_channel_post;
+  if (!message || !message.chat || message.chat.type !== 'channel' || String(message.chat.id) !== TELEGRAM_CHANNEL_ID ||
+      !Number.isSafeInteger(message.message_id) || message.message_id < 1) {
+    return { success: true, ignored: true };
+  }
+
+  const current = db.telegramPosts.find((post) => post.chatId === TELEGRAM_CHANNEL_ID && post.messageId === message.message_id);
+  const content = typeof message.text === 'string' ? message.text : typeof message.caption === 'string' ? message.caption : '';
+  const body = text(content, { max: 4096, label: 'Допис', multiline: true });
+  const photos = Array.isArray(message.photo) ? message.photo : [];
+  const hasPhoto = photos.length > 0;
+  let photo = null;
+  for (const candidate of photos.slice().reverse()) {
+    if (typeof candidate.file_id !== 'string' || Number(candidate.file_size) > TELEGRAM_IMAGE_MAX_BYTES) continue;
+    photo = await telegramPhoto(candidate.file_id);
+    if (photo) break;
+  }
+  const chatUsername = typeof message.chat.username === 'string' && /^[A-Za-z0-9_]{5,32}$/.test(message.chat.username)
+    ? message.chat.username : '';
+  const privateChannelId = TELEGRAM_CHANNEL_ID.slice(4);
+  const link = chatUsername
+    ? `https://t.me/${chatUsername}/${message.message_id}`
+    : `https://t.me/c/${privateChannelId}/${message.message_id}`;
+  const telegramDate = Number(message.date);
+  const createdAt = current ? current.createdAt
+    : Number.isSafeInteger(telegramDate) && telegramDate > 0 ? new Date(telegramDate * 1000).toISOString() : nowIso();
+  const post = {
+    id: current ? current.id : newId(),
+    chatId: TELEGRAM_CHANNEL_ID,
+    messageId: message.message_id,
+    message: body || 'Допис без тексту — відкрий оригінал у Telegram.',
+    photo: hasPhoto ? (photo || (current && current.photo) || null) : null,
+    link,
+    createdAt,
+  };
+  if (current) {
+    if (current.photo && current.photo !== post.photo) removeImage(current.photo);
+    Object.assign(current, post);
+  } else {
+    db.telegramPosts.push(post);
+  }
+  db.telegramPosts.sort((a, b) => b.messageId - a.messageId);
+  for (const oldPost of db.telegramPosts.splice(TELEGRAM_POST_LIMIT)) {
+    if (oldPost.photo) removeImage(oldPost.photo);
+  }
+  saveDb();
+  return { success: true };
 });
 
 route('GET', '/api/events', (ctx) => ({
@@ -630,9 +773,36 @@ route('POST', '/api/users/:username/follow', (ctx) => {
   if (!u) throw new HttpError(404, 'Користувача не знайдено');
   if (u.id === me.id) throw bad('Не можна підписатися на себе');
   const i = db.follows.findIndex((f) => f.from === me.id && f.to === u.id);
-  if (i >= 0) db.follows.splice(i, 1); else db.follows.push({ from: me.id, to: u.id, at: nowIso() });
+  if (i >= 0) db.follows.splice(i, 1);
+  else {
+    const createdAt = nowIso();
+    db.follows.push({ from: me.id, to: u.id, at: createdAt });
+    db.notifications.unshift({ id: newId(), userId: u.id, actorId: me.id, type: 'follow', createdAt, readAt: null });
+    const recipientNotifications = db.notifications.filter((n) => n.userId === u.id);
+    for (const stale of recipientNotifications.slice(100)) {
+      db.notifications = db.notifications.filter((n) => n.id !== stale.id);
+    }
+  }
   saveDb();
   return { success: true, following: i < 0, followers: followersOf(u.id).length };
+});
+
+route('GET', '/api/notifications', (ctx) => {
+  const user = requireUser(ctx);
+  const notifications = db.notifications.filter((n) => n.userId === user.id).slice(0, 100)
+    .map((n) => ({ id: n.id, type: n.type, createdAt: n.createdAt, readAt: n.readAt, actor: brief(userById(n.actorId)) }))
+    .filter((n) => n.actor);
+  return { success: true, notifications, unread: notifications.filter((n) => !n.readAt).length };
+});
+
+route('PATCH', '/api/notifications/read', (ctx) => {
+  const user = requireUser(ctx);
+  const readAt = nowIso();
+  for (const notification of db.notifications) {
+    if (notification.userId === user.id && !notification.readAt) notification.readAt = readAt;
+  }
+  saveDb();
+  return { success: true, unread: 0 };
 });
 
 for (const kind of ['followers', 'following']) {
@@ -812,7 +982,7 @@ route('GET', '/api/admin/export', (ctx) => {
   adminGuard(ctx.req);
   return {
     success: true, exportedAt: nowIso(), storage: pool ? 'postgres' : 'file',
-    data: { users: db.users, cards: db.cards, letters: db.letters, memes: db.memes, events: db.events, follows: db.follows, reports: db.reports },
+    data: { users: db.users, cards: db.cards, letters: db.letters, memes: db.memes, events: db.events, follows: db.follows, reports: db.reports, notifications: db.notifications },
   };
 });
 
@@ -917,6 +1087,15 @@ function readBody(req) {
 
 async function handleApi(req, res, url) {
   const method = req.method === 'HEAD' ? 'GET' : req.method;
+  if (method === 'POST' && url.pathname === '/api/telegram/webhook') {
+    if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_WEBHOOK_SECRET || !/^-100\d+$/.test(TELEGRAM_CHANNEL_ID)) {
+      throw new HttpError(503, 'Автопублікацію Telegram ще не налаштовано');
+    }
+    const suppliedSecret = req.headers['x-telegram-bot-api-secret-token'];
+    if (typeof suppliedSecret !== 'string' || !safeEqual(suppliedSecret, TELEGRAM_WEBHOOK_SECRET)) {
+      throw new HttpError(403, 'Заборонено');
+    }
+  }
   if (method !== 'GET') {
     const origin = req.headers.origin;
     if (origin) {
@@ -1009,6 +1188,51 @@ function serveStatic(req, res, pathname) {
   return undefined;
 }
 
+async function configureTelegramWebhook() {
+  if (!TELEGRAM_BOT_TOKEN && !TELEGRAM_CHANNEL_ID && !TELEGRAM_WEBHOOK_SECRET) return;
+  const configuredUrl = TELEGRAM_WEBHOOK_URL || (process.env.RENDER_EXTERNAL_URL
+    ? `${process.env.RENDER_EXTERNAL_URL.replace(/\/+$/, '')}/api/telegram/webhook` : '');
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHANNEL_ID || !TELEGRAM_WEBHOOK_SECRET || !configuredUrl) {
+    console.warn('Telegram автопублікація не налаштована: потрібні токен, ID каналу, секрет вебхука й HTTPS URL.');
+    return;
+  }
+  if (!/^-100\d+$/.test(TELEGRAM_CHANNEL_ID) || !/^[A-Za-z0-9_-]{1,256}$/.test(TELEGRAM_WEBHOOK_SECRET)) {
+    console.warn('Telegram автопублікація не налаштована: перевір ID каналу й формат секрету вебхука.');
+    return;
+  }
+  let webhookUrl;
+  try {
+    webhookUrl = new URL(configuredUrl);
+    if (webhookUrl.protocol !== 'https:' || webhookUrl.username || webhookUrl.password || webhookUrl.pathname !== '/api/telegram/webhook') {
+      throw new Error('invalid URL');
+    }
+  } catch (e) {
+    console.warn('Telegram автопублікація не налаштована: потрібна HTTPS адреса /api/telegram/webhook.');
+    return;
+  }
+  const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url: webhookUrl.toString(),
+      secret_token: TELEGRAM_WEBHOOK_SECRET,
+      allowed_updates: ['channel_post', 'edited_channel_post'],
+    }),
+    signal: AbortSignal.timeout(15000),
+  }).catch(() => null);
+  if (!response || !response.ok) {
+    console.error('Не вдалося налаштувати Telegram webhook. Перевір змінні середовища й доступність Telegram API.');
+    return;
+  }
+  const result = await response.json().catch(() => null);
+  if (!result || !result.ok) {
+    console.error('Telegram відхилив налаштування webhook. Перевір токен бота й адресу.');
+    return;
+  }
+  telegramWebhookReady = true;
+  console.log('Telegram webhook налаштовано.');
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
@@ -1046,6 +1270,7 @@ const server = http.createServer(async (req, res) => {
   if (process.env.DATABASE_URL) await initPostgres(); else loadDb();
   server.listen(PORT, HOST, () => {
     console.log(`Poshtokratia запущена: http://${HOST}:${PORT}`);
+    configureTelegramWebhook().catch(() => console.error('Не вдалося налаштувати Telegram webhook.'));
     if (!pool) console.warn('⚠️  DATABASE_URL не задано — дані лежать у файлах і ЗНИКНУТЬ при деплої на безкоштовному Render. Підключи базу (DATABASE_URL).');
     if (!ADMIN_ENABLED) console.warn('⚠️  ADMIN_PASSWORD не задано — адмінка /admin вимкнена. Додай змінну середовища ADMIN_PASSWORD.');
     else if (ADMIN_KEY.length < 10) console.warn('⚠️  ADMIN_PASSWORD короткий — краще 12+ символів.');
