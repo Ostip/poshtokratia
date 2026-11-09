@@ -262,6 +262,7 @@
     if (area) {
       area.innerHTML = S.me
         ? `<button class="nav-user" data-action="profile" aria-label="Мій профіль">${avatar(S.me, 'sm')}<span>${esc(S.me.name.split(' ')[0])}</span></button>
+           <button class="nav-btn notification-btn" data-action="notifications" aria-label="Сповіщення${S.me.unreadNotifications ? `, нових: ${S.me.unreadNotifications}` : ''}">🔔<span class="notification-count"${S.me.unreadNotifications ? '' : ' hidden'}>${S.me.unreadNotifications > 9 ? '9+' : S.me.unreadNotifications || ''}</span></button>
            <button class="nav-btn nav-btn-auth" data-action="logout">Вийти</button>`
         : `<button class="nav-btn nav-btn-auth" data-action="login">Увійти <span class="indicator ind-green"></span></button>
            <button class="nav-btn nav-btn-auth" data-action="register">Реєстрація <span class="indicator ind-yellow"></span></button>`;
@@ -443,6 +444,20 @@
   /* ───────────── завантаження даних ───────────── */
   async function loadMe() {
     try { S.me = (await api('/me')).user; } catch (e) { S.me = null; }
+  }
+  async function refreshNotificationCount() {
+    if (!S.me) return;
+    try {
+      const { user } = await api('/me');
+      if (!S.me) return;
+      if (!user) { S.me = null; renderAuth(); return; }
+      if (S.me.unreadNotifications !== user.unreadNotifications) {
+        S.me.unreadNotifications = user.unreadNotifications;
+        renderAuth();
+      }
+    } catch (e) {
+      if (!e.network && e.status !== 401) console.error('Не вдалося оновити сповіщення:', e.message);
+    }
   }
   async function loadData() {
     const [st, ev, pp] = await Promise.all([api('/state'), api('/events'), api('/people').catch(() => ({ people: [] }))]);
@@ -731,6 +746,28 @@
     } catch (e) { closeModal(); toast(e.message, 'error'); }
   }
 
+  async function openNotifications() {
+    if (!S.me) { authModal('login'); return; }
+    S.modal = { type: 'notifications' };
+    openModal('<div class="spinner"></div>');
+    try {
+      const d = await api('/notifications');
+      if (!S.modal || S.modal.type !== 'notifications') return;
+      if (d.unread) await api('/notifications/read', { method: 'PATCH', body: {} });
+      S.me.unreadNotifications = 0;
+      renderAuth();
+      const rows = d.notifications.map((n) => {
+        const date = new Date(n.createdAt);
+        const when = Number.isNaN(date.getTime()) ? '' : date.toLocaleString('uk-UA', { dateStyle: 'medium', timeStyle: 'short' });
+        return `<button type="button" class="notification-item${n.readAt ? '' : ' unread'}" data-action="user" data-username="${esc(n.actor.username)}">
+          ${avatar(n.actor, 'md')}<span><b>${esc(n.actor.name)}</b> підписався(лась) на тебе${when ? `<small>${esc(when)}</small>` : ''}</span><span class="notification-arrow">›</span>
+        </button>`;
+      }).join('');
+      openModal(`<div class="modal-title">Сповіщення</div>${rows || '<div class="empty-state">Поки немає нових сповіщень.</div>'}`);
+      S.modal = { type: 'notifications' };
+    } catch (e) { closeModal(); toast(e.message, 'error'); }
+  }
+
   async function follow(btn) {
     if (!S.me) { toast('Увійди, щоб підписуватись 🔔'); authModal('login'); return; }
     const username = btn.dataset.username;
@@ -965,6 +1002,7 @@
       S.me = null; closeModal(); await refreshData(); renderAuth(); toast('Ти вийшов з акаунта. До зустрічі! 👋');
     },
     profile: () => openProfile(),
+    notifications: () => openNotifications(),
     user: (_, el) => openUser(el.dataset.username),
     story: (_, el) => openStory(el.dataset.id),
     meme: (_, el) => openMeme(el.dataset.id),
@@ -1189,5 +1227,8 @@
   bootstrap();
   setInterval(() => { if (!document.hidden && S.loaded) { renderEvents(); } }, 60 * 1000);          // оновлюємо відлік «через N днів»
   setInterval(() => { if (!document.hidden && S.loaded) refreshData({ silent: true }); }, 45 * 1000); // нові заходи зʼявляються без перезавантаження
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.loaded) refreshData({ silent: true }); });
+  setInterval(() => { if (!document.hidden && S.loaded) refreshNotificationCount(); }, 45 * 1000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && S.loaded) { refreshData({ silent: true }); refreshNotificationCount(); }
+  });
 })();

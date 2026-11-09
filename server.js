@@ -136,7 +136,7 @@ function removeImage(url) {
 let db;
 
 function emptyDb() {
-  return { meta: { secret: '', version: 2 }, users: [], cards: [], letters: [], memes: [], events: [], follows: [], reports: [] };
+  return { meta: { secret: '', version: 2 }, users: [], cards: [], letters: [], memes: [], events: [], follows: [], reports: [], notifications: [] };
 }
 
 // ── SQL (прості запити; таблиці створюються автоматично при старті)
@@ -152,7 +152,7 @@ const MIME_BY_EXT = { '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image
 function normalizeRaw(raw) {
   db = emptyDb();
   if (raw && typeof raw === 'object') {
-    for (const k of ['users', 'cards', 'letters', 'memes', 'events', 'follows', 'reports']) if (Array.isArray(raw[k])) db[k] = raw[k];
+    for (const k of ['users', 'cards', 'letters', 'memes', 'events', 'follows', 'reports', 'notifications']) if (Array.isArray(raw[k])) db[k] = raw[k];
     if (raw.meta && typeof raw.meta === 'object') db.meta = { ...db.meta, ...raw.meta };
   }
 }
@@ -318,6 +318,17 @@ function migrate() {
     report.resolvedAt = report.status === 'resolved' ? (report.resolvedAt || report.createdAt) : null;
     report.resolution = report.status === 'resolved' && ['removed', 'retained'].includes(report.resolution) ? report.resolution : null;
   }
+  db.notifications = db.notifications.filter((notification) => notification && typeof notification === 'object' && !Array.isArray(notification));
+  for (const notification of db.notifications) {
+    notification.id = String(notification.id || newId());
+    notification.userId = String(notification.userId || '');
+    notification.actorId = String(notification.actorId || '');
+    notification.type = 'follow';
+    notification.createdAt = notification.createdAt || nowIso();
+    notification.readAt = notification.readAt || null;
+  }
+  db.notifications = db.notifications.filter((notification) =>
+    db.users.some((u) => u.id === notification.userId) && db.users.some((u) => u.id === notification.actorId));
   db.follows = db.follows.filter((f) => f && f.from && f.to && f.from !== f.to);
   for (const e of db.events) {
     e.id = String(e.id || newId());
@@ -425,6 +436,7 @@ const meUser = (u) => ({
   ...pubUser(u), email: u.email,
   following: followingOf(u.id).map((f) => userById(f.to)).filter(Boolean).map((x) => x.username),
   followers: followersOf(u.id).length,
+  unreadNotifications: db.notifications.filter((n) => n.userId === u.id && !n.readAt).length,
 });
 
 function viewCard(c, viewer) {
@@ -466,6 +478,7 @@ function removeUserTraces(user) {
   }
   db.letters = db.letters.filter((l) => l.userId !== user.id);
   db.follows = db.follows.filter((f) => f.from !== user.id && f.to !== user.id);
+  db.notifications = db.notifications.filter((n) => n.userId !== user.id && n.actorId !== user.id);
   for (const e of db.events) e.going = e.going.filter((x) => x !== user.id);
   removeImage(user.avatar);
   db.users = db.users.filter((u) => u.id !== user.id);
@@ -630,9 +643,36 @@ route('POST', '/api/users/:username/follow', (ctx) => {
   if (!u) throw new HttpError(404, 'Користувача не знайдено');
   if (u.id === me.id) throw bad('Не можна підписатися на себе');
   const i = db.follows.findIndex((f) => f.from === me.id && f.to === u.id);
-  if (i >= 0) db.follows.splice(i, 1); else db.follows.push({ from: me.id, to: u.id, at: nowIso() });
+  if (i >= 0) db.follows.splice(i, 1);
+  else {
+    const createdAt = nowIso();
+    db.follows.push({ from: me.id, to: u.id, at: createdAt });
+    db.notifications.unshift({ id: newId(), userId: u.id, actorId: me.id, type: 'follow', createdAt, readAt: null });
+    const recipientNotifications = db.notifications.filter((n) => n.userId === u.id);
+    for (const stale of recipientNotifications.slice(100)) {
+      db.notifications = db.notifications.filter((n) => n.id !== stale.id);
+    }
+  }
   saveDb();
   return { success: true, following: i < 0, followers: followersOf(u.id).length };
+});
+
+route('GET', '/api/notifications', (ctx) => {
+  const user = requireUser(ctx);
+  const notifications = db.notifications.filter((n) => n.userId === user.id).slice(0, 100)
+    .map((n) => ({ id: n.id, type: n.type, createdAt: n.createdAt, readAt: n.readAt, actor: brief(userById(n.actorId)) }))
+    .filter((n) => n.actor);
+  return { success: true, notifications, unread: notifications.filter((n) => !n.readAt).length };
+});
+
+route('PATCH', '/api/notifications/read', (ctx) => {
+  const user = requireUser(ctx);
+  const readAt = nowIso();
+  for (const notification of db.notifications) {
+    if (notification.userId === user.id && !notification.readAt) notification.readAt = readAt;
+  }
+  saveDb();
+  return { success: true, unread: 0 };
 });
 
 for (const kind of ['followers', 'following']) {
@@ -812,7 +852,7 @@ route('GET', '/api/admin/export', (ctx) => {
   adminGuard(ctx.req);
   return {
     success: true, exportedAt: nowIso(), storage: pool ? 'postgres' : 'file',
-    data: { users: db.users, cards: db.cards, letters: db.letters, memes: db.memes, events: db.events, follows: db.follows, reports: db.reports },
+    data: { users: db.users, cards: db.cards, letters: db.letters, memes: db.memes, events: db.events, follows: db.follows, reports: db.reports, notifications: db.notifications },
   };
 });
 

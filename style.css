@@ -141,6 +141,15 @@ a { color: inherit; }
   border-radius: 99px; padding: 3px 14px 3px 4px; cursor: pointer; font-weight: 800; font-size: 12px; transition: background .15s;
 }
 .nav-user:hover { background: rgba(255,255,255,.16); }
+.notification-btn { position: relative; min-width: 42px; justify-content: center; }
+.notification-count { position: absolute; top: -5px; right: -5px; min-width: 18px; height: 18px; padding: 0 4px; display: grid; place-items: center; border: 2px solid #171717; border-radius: 99px; background: var(--red); color: #fff; font-size: 10px; line-height: 1; }
+.notification-count[hidden] { display: none; }
+.notification-item { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
+.notification-item + .notification-item { margin-top: 8px; }
+.notification-item.unread { background: #fff9df; border-color: #e8d8a1; }
+.notification-item > span:nth-child(2) { flex: 1; }
+.notification-item small { display: block; color: var(--muted); font-size: 11px; }
+.notification-arrow { font-size: 24px; color: var(--muted); }
 .nav-burger { display: none; width: 40px; height: 36px; background: #2a2a2a; border: 2px solid #4a4a4a; border-radius: 8px; cursor: pointer; flex-direction: column; justify-content: center; align-items: center; gap: 4px; }
 .nav-burger span { width: 18px; height: 2px; background: #fff; border-radius: 2px; transition: transform .2s, opacity .2s; }
 .top-nav.nav-open .nav-burger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
