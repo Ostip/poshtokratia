@@ -1,8 +1,8 @@
 {
-  "name": "zalizna-zmina",
+  "name": "poshtokratia",
   "version": "2.1.0",
   "private": true,
-  "description": "Сайт Залізної Зміни: акаунти, історії, листи, меми та заходи",
+  "description": "Poshtokratia: акаунти, історії, листи, меми та заходи",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

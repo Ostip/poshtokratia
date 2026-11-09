@@ -1,7 +1,7 @@
 {
-  "name": "Залізна Зміна",
-  "short_name": "Зміна",
-  "description": "Історії, заходи та спільнота Залізної Зміни",
+  "name": "Poshtokratia",
+  "short_name": "Poshtokratia",
+  "description": "Історії, листи, меми та заходи спільноти Poshtokratia",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
