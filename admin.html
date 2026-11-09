@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#161616" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Студія — Залізна Зміна</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23111'/%3E%3Ctext x='50' y='70' font-size='62' text-anchor='middle' fill='%23ffd93d' font-family='Arial' font-weight='900'%3EЗ%3C/text%3E%3C/svg%3E" />
+<title>Студія — Poshtokratia</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23111'/%3E%3Ctext x='50' y='70' font-size='62' text-anchor='middle' fill='%23ffd93d' font-family='Arial' font-weight='900'%3EP%3C/text%3E%3C/svg%3E" />
 <style>
 *,*::before,*::after{box-sizing:border-box}*{margin:0;padding:0}
 :root{--red:#d0021b;--yellow:#ffd93d;--sky:#6ec6f5;--lav:#c9b8f5;--mint:#7de8c8;--pink:#f5a0c0;--peach:#ffc49b;--ink:#161210;--muted:#6b625b;--line:#e6d8c7;--bg:#f4ede2}
@@ -124,8 +124,8 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
 
 <div class="login" id="login">
   <div class="login-card">
-    <div class="logo">З</div>
-    <h1>Студія Залізної Зміни</h1>
+    <div class="logo">P</div>
+    <h1>Студія Poshtokratia</h1>
     <p>Тут ти додаєш заходи — і вони одразу зʼявляються на сайті.</p>
     <form id="login-form">
       <div><label class="lbl" for="key">Ключ адміністратора</label><input id="key" type="password" autocomplete="current-password" placeholder="Твій ключ (ADMIN_PASSWORD)" autofocus></div>
@@ -138,7 +138,7 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
 
 <div id="app" class="hidden">
   <header class="top">
-    <div class="brand">Залізна <span>Зміна</span> · студія</div>
+    <div class="brand">Poshtokratia <span>· студія</span></div>
     <div class="tabs" role="tablist">
       <button class="tab active" data-tab="events">🎟 Заходи</button>
       <button class="tab" data-tab="moderation">🛡 Модерація</button>
@@ -211,8 +211,8 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
 
     <!-- ═══ МОДЕРАЦІЯ ═══ -->
     <section class="panel" id="p-moderation">
-      <h2>Модерація</h2><p class="sub">Видаляй те, що порушує правила спільноти.</p>
-      <div class="subtabs" id="modtabs"><button class="tab active" data-mod="cards">Історії</button><button class="tab" data-mod="letters">Листи</button><button class="tab" data-mod="memes">Меми</button></div>
+      <h2>Модерація</h2><p class="sub">Переглядай публікації та звернення спільноти. Скарги надходять у цей розділ.</p>
+      <div class="subtabs" id="modtabs"><button class="tab active" data-mod="cards">Історії</button><button class="tab" data-mod="letters">Листи</button><button class="tab" data-mod="memes">Меми</button><button class="tab" data-mod="reports">Скарги</button></div>
       <div class="list" id="mod-list"></div>
     </section>
 
@@ -478,8 +478,18 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
     try { await api(path, { method: 'DELETE' }); toast('Видалено', 'good'); await reload(); } catch (er) { toast(er.message, 'bad'); }
   }
   function renderMod() {
-    const k = S.mod; const items = S.data[k]; const box = $('#mod-list');
+    const k = S.mod; const items = S.data[k] || []; const box = $('#mod-list');
     if (!items.length) { box.innerHTML = '<div class="empty">Тут поки порожньо</div>'; return; }
+    if (k === 'reports') {
+      const labels = { abuse: 'Образи або погрози', privacy: 'Чужі приватні дані', spam: 'Спам', other: 'Інше' };
+      box.innerHTML = items.map((x) => `<div class="item"><div class="thumb">🚩</div>
+        <div class="info"><div class="t">${esc(labels[x.reason] || 'Інше')} · ${x.status === 'pending' ? '<span class="pill">Очікує</span>' : '<span class="pill draft">Опрацьовано</span>'}</div>
+          <div class="m">${esc(x.createdAt)} · Лист: ${x.letter ? `${esc(x.letter.author)} → ${esc(x.letter.recipient || 'Невідомий адресат')}` : 'вже видалений'}</div>
+          ${x.letter ? `<div class="m" style="color:#333;margin-top:3px">${esc(x.letter.message.slice(0, 240))}</div>` : ''}
+          ${x.details ? `<div class="m" style="margin-top:3px">Деталі: ${esc(x.details)}</div>` : ''}</div>
+        ${x.status === 'pending' ? `<div class="btns"><button class="btn small ghost" data-report-action="retain" data-id="${esc(x.id)}">Залишити лист</button><button class="btn small danger" data-report-action="remove" data-id="${esc(x.id)}">Видалити лист</button></div>` : `<div class="m">${x.resolution === 'removed' ? 'Лист видалено' : 'Лист залишено'}</div>`}</div>`).join('');
+      return;
+    }
     box.innerHTML = items.map((x) => {
       const title = k === 'cards' ? x.name : k === 'letters' ? `${x.author} → ${x.recipient}` : x.title;
       const body = k === 'cards' ? x.story : k === 'letters' ? x.message : x.text;
@@ -488,7 +498,19 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
         <div class="btns"><button class="btn small danger" data-k="${k}" data-id="${esc(x.id)}">🗑 Видалити</button></div></div>`;
     }).join('');
   }
-  $('#mod-list').addEventListener('click', (e) => { const b = e.target.closest('button[data-id]'); if (b) del(`/${b.dataset.k}/${b.dataset.id}`, 'Видалити цей запис назавжди?'); });
+  $('#mod-list').addEventListener('click', async (e) => {
+    const reportButton = e.target.closest('button[data-report-action]');
+    if (reportButton) {
+      const remove = reportButton.dataset.reportAction === 'remove';
+      if (remove && !confirm('Видалити лист назавжди?')) return;
+      try {
+        await api('/admin/reports/' + encodeURIComponent(reportButton.dataset.id), { method: 'PATCH', body: { action: remove ? 'remove' : 'retain' } });
+        toast(remove ? 'Лист видалено, звернення опрацьовано' : 'Лист залишено, звернення опрацьовано', 'good'); await reload();
+      } catch (er) { toast(er.message, 'bad'); }
+      return;
+    }
+    const b = e.target.closest('button[data-id][data-k]'); if (b) del(`/${b.dataset.k}/${b.dataset.id}`, 'Видалити цей запис назавжди?');
+  });
   function renderPeople() {
     const users = S.data.users; $('#n-people').textContent = users.length;
     $('#people-list').innerHTML = users.length ? users.map((u) => `<div class="item"><div class="thumb">${safeSrc(u.avatar) ? `<img class="thumb" src="${esc(u.avatar)}" alt="">` : esc(([...u.name][0] || '?').toUpperCase())}</div>

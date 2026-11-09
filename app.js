@@ -1,4 +1,4 @@
-/* ═══════════════ Залізна Зміна — клієнтська логіка ═══════════════ */
+/* ═══════════════ Poshtokratia — клієнтська логіка ═══════════════ */
 (() => {
   'use strict';
 
@@ -398,6 +398,7 @@
       <article class="feed-item" style="--i:${i}">
         <div class="feed-top">${authorChip(l.authorInfo, l.author)}<small>→ ${esc(l.recipient || 'Невідомий адресат')} · ${esc(l.date)}</small></div>
         <p>${esc(l.message)}</p>
+        <button type="button" class="ghost-btn report-btn" data-action="report" data-id="${esc(l.id)}">Поскаржитися</button>
       </article>`).join('');
     moreBtn('#letters-more', S.letters.length, S.shown.letters);
   }
@@ -656,6 +657,16 @@
           await api('/letters', { method: 'POST', body });
           form.reset(); updateCounters(form); showFormError(form, '');
           await refreshData(); toast('Лист надіслано! ✉', 'success');
+        } catch (e) { showFormError(form, e.message); }
+      });
+    },
+    async report(form, btn) {
+      const reason = form.elements.reason.value;
+      if (!['abuse', 'privacy', 'spam', 'other'].includes(reason)) return invalid(form, 'reason', 'Обери причину звернення');
+      return busy(btn, async () => {
+        try {
+          await api(`/letters/${encodeURIComponent(form.dataset.id)}/reports`, { method: 'POST', body: { reason, details: form.elements.details.value.trim() } });
+          closeModal(); toast('Звернення передано на перегляд модерації.', 'success');
         } catch (e) { showFormError(form, e.message); }
       });
     },
@@ -935,7 +946,7 @@
   async function shareEvent(id) {
     const e = S.events.find((x) => x.id === id); if (!e) return;
     const url = `${location.origin}/#event/${e.id}`;
-    if (navigator.share) { try { await navigator.share({ title: e.title, text: `${e.title} — Залізна Зміна`, url }); return; } catch (er) { if (er && er.name === 'AbortError') return; } }
+    if (navigator.share) { try { await navigator.share({ title: e.title, text: `${e.title} — Poshtokratia`, url }); return; } catch (er) { if (er && er.name === 'AbortError') return; } }
     toast((await copyText(url)) ? 'Посилання скопійовано 🔗' : url, 'success');
   }
 
@@ -968,10 +979,23 @@
     filter(f) { S.eventFilter = f; $$('#event-filters .chip').forEach((c) => c.classList.toggle('active', c.dataset.action === 'filter:' + f)); renderEvents(); },
     anon() {
       S.modal = { type: 'anon' };
-      openModal(`<div class="modal-title">✉ Анонімний лист</div><form data-form="anon" novalidate><div class="stack-form">
+      openModal(`<div class="modal-title">✉ Анонімний лист</div>
+        <div class="letter-disclosure"><strong>Перед надсиланням</strong><p>Лист буде опубліковано у спільній стрічці, де його можуть прочитати інші. Анонімність приховує ім’я відправника, але не текст.</p><p>Будь ввічливим(ою), не надсилай погроз, образ, спаму чи чужих приватних даних. На лист можна поскаржитися для перегляду модератором.</p></div>
+        <form data-form="anon" novalidate><div class="stack-form">
         <div><label class="form-label" for="a-to">Кому?</label><input class="form-input" id="a-to" name="recipient" maxlength="60" placeholder="Або залиш порожнім"></div>
         <div><label class="form-label" for="a-msg">Твоє повідомлення</label><textarea class="form-textarea" id="a-msg" name="message" maxlength="1500" placeholder="Напиши те, що важко сказати вголос…" autofocus></textarea></div>
         <div class="form-error" role="alert"></div><button class="publish-btn" type="submit">Надіслати →</button></div></form>`);
+    },
+    report(_, el) {
+      const letter = S.letters.find((item) => item.id === el.dataset.id);
+      if (!letter) { toast('Лист уже недоступний.', 'error'); return; }
+      S.modal = { type: 'report', id: letter.id };
+      openModal(`<div class="modal-title">Поскаржитися на лист</div>
+        <p class="field-hint">Звернення побачить модератор в адмінці. Не вказуй у поясненні приватні дані.</p>
+        <form data-form="report" data-id="${esc(letter.id)}" novalidate><div class="stack-form">
+          <div><label class="form-label" for="report-reason">Причина</label><select class="form-input" id="report-reason" name="reason"><option value="">Обери причину</option><option value="abuse">Образи або погрози</option><option value="privacy">Чужі приватні дані</option><option value="spam">Спам</option><option value="other">Інше</option></select></div>
+          <div><label class="form-label" for="report-details">Деталі (необов’язково)</label><textarea class="form-textarea" id="report-details" name="details" maxlength="500" placeholder="Коротко поясни звернення"></textarea></div>
+          <div class="form-error" role="alert"></div><button class="publish-btn" type="submit">Надіслати скаргу</button></div></form>`);
     },
     join() { if (S.me) scrollToId('section-events'); else authModal('register'); },
     toast: (msg) => toast(msg),
@@ -1118,7 +1142,7 @@
       ? '<ol class="how"><li>Натисни кнопку <b>«Поділитись»</b> ⬆️ внизу Safari</li><li>Обери <b>«На початковий екран»</b></li><li>Натисни <b>«Додати»</b> — готово!</li></ol>'
       : /android/i.test(ua)
         ? '<ol class="how"><li>Натисни меню <b>⋮</b> у браузері</li><li>Обери <b>«Встановити застосунок»</b> або <b>«Додати на головний екран»</b></li></ol>'
-        : '<ol class="how"><li>У Chrome або Edge натисни іконку <b>встановлення</b> в адресному рядку</li><li>Або меню <b>⋮ → «Встановити Залізна Зміна»</b></li></ol>';
+        : '<ol class="how"><li>У Chrome або Edge натисни іконку <b>встановлення</b> в адресному рядку</li><li>Або меню <b>⋮ → «Встановити Poshtokratia»</b></li></ol>';
     S.modal = { type: 'install' };
     openModal(`<div class="modal-title">📱 Додай на головний екран</div><p style="color:var(--muted);margin-bottom:10px">Сайт відкриватиметься як справжній застосунок — без адресного рядка, одним дотиком.</p>${how}`);
   }

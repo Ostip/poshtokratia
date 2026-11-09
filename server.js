@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Залізна Зміна — сервер без зовнішніх залежностей (чистий Node.js).
+ * Poshtokratia — сервер без зовнішніх залежностей (чистий Node.js).
  *
  * Що вміє:
  *  - акаунти (реєстрація / вхід / профіль) із безпечними сесіями (HttpOnly cookie)
@@ -136,7 +136,7 @@ function removeImage(url) {
 let db;
 
 function emptyDb() {
-  return { meta: { secret: '', version: 2 }, users: [], cards: [], letters: [], memes: [], events: [], follows: [] };
+  return { meta: { secret: '', version: 2 }, users: [], cards: [], letters: [], memes: [], events: [], follows: [], reports: [] };
 }
 
 // ── SQL (прості запити; таблиці створюються автоматично при старті)
@@ -152,7 +152,7 @@ const MIME_BY_EXT = { '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image
 function normalizeRaw(raw) {
   db = emptyDb();
   if (raw && typeof raw === 'object') {
-    for (const k of ['users', 'cards', 'letters', 'memes', 'events', 'follows']) if (Array.isArray(raw[k])) db[k] = raw[k];
+    for (const k of ['users', 'cards', 'letters', 'memes', 'events', 'follows', 'reports']) if (Array.isArray(raw[k])) db[k] = raw[k];
     if (raw.meta && typeof raw.meta === 'object') db.meta = { ...db.meta, ...raw.meta };
   }
 }
@@ -307,6 +307,17 @@ function migrate() {
   fix(db.cards, 'photo');
   fix(db.memes, 'photo');
   fix(db.letters, null);
+  db.reports = db.reports.filter((report) => report && typeof report === 'object' && !Array.isArray(report));
+  for (const report of db.reports) {
+    report.id = String(report.id || newId());
+    report.letterId = String(report.letterId || '');
+    report.reason = ['abuse', 'privacy', 'spam', 'other'].includes(report.reason) ? report.reason : 'other';
+    report.details = typeof report.details === 'string' ? report.details.slice(0, 500) : '';
+    report.status = report.status === 'resolved' ? 'resolved' : 'pending';
+    report.createdAt = report.createdAt || nowIso();
+    report.resolvedAt = report.status === 'resolved' ? (report.resolvedAt || report.createdAt) : null;
+    report.resolution = report.status === 'resolved' && ['removed', 'retained'].includes(report.resolution) ? report.resolution : null;
+  }
   db.follows = db.follows.filter((f) => f && f.from && f.to && f.from !== f.to);
   for (const e of db.events) {
     e.id = String(e.id || newId());
@@ -712,9 +723,32 @@ route('POST', '/api/letters', (ctx) => {
   saveDb();
   return { success: true, letter: viewLetter(letter) };
 });
+function removeLetter(letterId) {
+  db.letters = db.letters.filter((letter) => letter.id !== letterId);
+  const resolvedAt = nowIso();
+  for (const report of db.reports) {
+    if (report.letterId === letterId && report.status === 'pending') {
+      report.status = 'resolved'; report.resolution = 'removed'; report.resolvedAt = resolvedAt;
+    }
+  }
+}
+
 route('DELETE', '/api/letters/:id', (ctx) => {
   adminGuard(ctx.req);
-  db.letters = db.letters.filter((l) => l.id !== ctx.params.id);
+  removeLetter(ctx.params.id);
+  saveDb();
+  return { success: true };
+});
+
+route('POST', '/api/letters/:id/reports', (ctx) => {
+  limit('letter-report:' + ctx.ip, 8, 60 * 60 * 1000);
+  const letter = db.letters.find((item) => item.id === ctx.params.id);
+  if (!letter) throw new HttpError(404, 'Лист не знайдено');
+  const reason = ctx.body.reason;
+  if (!['abuse', 'privacy', 'spam', 'other'].includes(reason)) throw bad('Обери причину звернення');
+  const details = text(ctx.body.details, { max: 500, label: 'Деталі', multiline: true });
+  const report = { id: newId(), letterId: letter.id, reason, details, status: 'pending', createdAt: nowIso(), resolvedAt: null, resolution: null };
+  db.reports.unshift(report);
   saveDb();
   return { success: true };
 });
@@ -751,10 +785,26 @@ route('GET', '/api/admin/content', (ctx) => {
     })),
     cards: db.cards.map((c) => viewCard(c, null)),
     letters: db.letters.map((l) => ({ ...viewLetter(l), anonymous: !!l.anonymous })),
+    reports: db.reports.map((report) => ({ ...report, letter: (() => { const letter = db.letters.find((item) => item.id === report.letterId); return letter ? { ...viewLetter(letter), anonymous: !!letter.anonymous } : null; })() })),
     memes: db.memes.map((m) => viewMeme(m, null)),
     events: db.events.map((e) => viewEvent(e, null)),
     storage: pool ? 'postgres' : 'file',
   };
+});
+
+route('PATCH', '/api/admin/reports/:id', (ctx) => {
+  adminGuard(ctx.req);
+  const report = db.reports.find((item) => item.id === ctx.params.id);
+  if (!report) throw new HttpError(404, 'Звернення не знайдено');
+  if (report.status === 'resolved') throw new HttpError(409, 'Це звернення вже опрацьовано');
+  const action = ctx.body.action;
+  if (!['remove', 'retain'].includes(action)) throw bad('Обери дію: remove або retain');
+  if (action === 'remove') removeLetter(report.letterId);
+  report.status = 'resolved';
+  report.resolution = action === 'remove' ? 'removed' : 'retained';
+  report.resolvedAt = nowIso();
+  saveDb();
+  return { success: true };
 });
 
 // Резервна копія всіх даних (JSON) — лише для адміна. Фото в копію не входять (лише посилання на них).
@@ -762,7 +812,7 @@ route('GET', '/api/admin/export', (ctx) => {
   adminGuard(ctx.req);
   return {
     success: true, exportedAt: nowIso(), storage: pool ? 'postgres' : 'file',
-    data: { users: db.users, cards: db.cards, letters: db.letters, memes: db.memes, events: db.events, follows: db.follows },
+    data: { users: db.users, cards: db.cards, letters: db.letters, memes: db.memes, events: db.events, follows: db.follows, reports: db.reports },
   };
 });
 
@@ -995,7 +1045,7 @@ const server = http.createServer(async (req, res) => {
 (async () => {
   if (process.env.DATABASE_URL) await initPostgres(); else loadDb();
   server.listen(PORT, HOST, () => {
-    console.log(`Залізна Зміна запущена: http://${HOST}:${PORT}`);
+    console.log(`Poshtokratia запущена: http://${HOST}:${PORT}`);
     if (!pool) console.warn('⚠️  DATABASE_URL не задано — дані лежать у файлах і ЗНИКНУТЬ при деплої на безкоштовному Render. Підключи базу (DATABASE_URL).');
     if (!ADMIN_ENABLED) console.warn('⚠️  ADMIN_PASSWORD не задано — адмінка /admin вимкнена. Додай змінну середовища ADMIN_PASSWORD.');
     else if (ADMIN_KEY.length < 10) console.warn('⚠️  ADMIN_PASSWORD короткий — краще 12+ символів.');
