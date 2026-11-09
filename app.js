@@ -16,6 +16,13 @@
   const hue = (str) => { let h = 0; for (const ch of String(str || '')) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
   const safeSrc = (u) => (typeof u === 'string' && (u.startsWith('/uploads/') || /^(assets\/|[\w.-]+\.(png|jpe?g|webp|gif|svg)$)/i.test(u))) ? u : '';
   const safeUrl = (u) => (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : '';
+  const telegramUrl = (u) => {
+    try {
+      const parsed = new URL(u);
+      return parsed.protocol === 'https:' && parsed.hostname === 't.me' && !parsed.port &&
+        /^\/(?:[A-Za-z0-9_]{5,32}\/\d+|c\/\d+\/\d+)$/.test(parsed.pathname) ? parsed.href : '';
+    } catch (e) { return ''; }
+  };
   const buzz = (ms = 12) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* ignore */ } };
   const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 
@@ -96,7 +103,7 @@
 
   /* ───────────── стан ───────────── */
   const S = {
-    me: null, cards: [], letters: [], memes: [], events: [],
+    me: null, cards: [], letters: [], memes: [], events: [], telegramPosts: [], telegramTotal: 0, telegramConfigured: false,
     stats: { people: 0, stories: 0, letters: 0, memes: 0, events: 0 },
     shown: { cards: 8, letters: 6, memes: 6 },
     eventFilter: 'upcoming', photos: { story: null, meme: null },
@@ -347,6 +354,39 @@
     grid.innerHTML = list.map((e, i) => ticketHTML(e, i, next && next.id)).join('');
   }
 
+  function renderTelegramPosts() {
+    const grid = $('#telegram-posts'); if (!grid) return;
+    if (!S.loaded) { grid.innerHTML = skeletons(3); return; }
+    if (S.loadError && !S.telegramConfigured && !S.telegramPosts.length) {
+      grid.innerHTML = retryBlock;
+      $('#telegram-more').hidden = true;
+      return;
+    }
+    if (!S.telegramPosts.length) {
+      grid.innerHTML = `<div class="telegram-empty">${S.telegramConfigured
+        ? 'У каналі поки немає дописів для показу.'
+        : 'Підключення каналу ще не активне. Адміністратор має налаштувати інтеграцію в Render.'}</div>`;
+      $('#telegram-more').hidden = true;
+      return;
+    }
+    grid.innerHTML = S.telegramPosts.map((post) => {
+      const image = safeSrc(post.photo);
+      const link = telegramUrl(post.link);
+      const date = new Date(post.createdAt);
+      const formattedDate = Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('uk-UA', { dateStyle: 'medium' }).format(date);
+      return `<article class="telegram-card">
+        ${image ? `<img class="telegram-photo" src="${esc(image)}" alt="" loading="lazy">` : ''}
+        <div class="telegram-content"><div class="telegram-date">${esc(formattedDate)}</div>
+          <p>${esc(post.message).replace(/\n/g, '<br>')}</p>
+          ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">Оригінал у Telegram ↗</a>` : ''}
+        </div>
+      </article>`;
+    }).join('');
+    const more = $('#telegram-more');
+    more.hidden = S.telegramPosts.length >= S.telegramTotal;
+    more.textContent = `Показати ще (${Math.max(S.telegramTotal - S.telegramPosts.length, 0)})`;
+  }
+
   function renderHeroNext() {
     const el = $('#hero-next'); if (!el) return;
     const e = S.loaded ? nextEvent() : null;
@@ -438,7 +478,7 @@
   }
 
   function renderAll() {
-    renderAuth(); renderStats(); renderEvents(); renderPeople(); renderCards(); renderLetters(); renderMemes();
+    renderAuth(); renderStats(); renderEvents(); renderTelegramPosts(); renderPeople(); renderCards(); renderLetters(); renderMemes();
   }
 
   /* ───────────── завантаження даних ───────────── */
@@ -460,14 +500,30 @@
     }
   }
   async function loadData() {
-    const [st, ev, pp] = await Promise.all([api('/state'), api('/events'), api('/people').catch(() => ({ people: [] }))]);
+    const [st, ev, pp, tg] = await Promise.all([api('/state'), api('/events'), api('/people').catch(() => ({ people: [] })), api('/telegram')]);
     S.cards = st.cards; S.letters = st.letters; S.memes = st.memes; S.stats = st.stats; S.events = ev.events; S.people = pp.people;
+    S.telegramPosts = tg.posts; S.telegramTotal = tg.total; S.telegramConfigured = tg.configured;
+  }
+  async function loadMoreTelegram(btn) {
+    if (btn.disabled || S.telegramPosts.length >= S.telegramTotal) return;
+    btn.disabled = true;
+    try {
+      const { posts, total, configured } = await api(`/telegram?offset=${S.telegramPosts.length}&limit=12`);
+      const known = new Set(S.telegramPosts.map((post) => post.id));
+      S.telegramPosts.push(...posts.filter((post) => !known.has(post.id)));
+      S.telegramTotal = total; S.telegramConfigured = configured;
+      renderTelegramPosts();
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
   }
   async function refreshData({ silent = false } = {}) {
     try {
       await loadData();
       S.loadError = false;
-      const sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.me && S.me.username, S.me && S.me.following]);
+      const sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.telegramPosts, S.telegramConfigured, S.me && S.me.username, S.me && S.me.following]);
       if (silent && sig === S.sig) return;
       S.sig = sig;
       renderAll();
@@ -488,7 +544,7 @@
     clearTimeout(slow);
     $('#net-banner').classList.remove('show');
     S.loaded = true;
-    S.sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.me && S.me.username, S.me && S.me.following]);
+    S.sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.telegramPosts, S.telegramConfigured, S.me && S.me.username, S.me && S.me.following]);
     renderAll();
     if (S.loadError) toast('Не вдалося завантажити дані сайту', 'error');
     setTimeout(() => document.body.classList.add('ready'), 1400);
@@ -1058,6 +1114,7 @@
       $$('#story-filters .chip').forEach((c) => c.classList.toggle('active', c.dataset.action === 'sfilter:' + f)); renderCards();
     },
     install: () => installApp(),
+    'telegram-more': (_, el) => loadMoreTelegram(el),
     reload: () => bootstrap(),
   };
 
