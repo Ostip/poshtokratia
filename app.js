@@ -15,7 +15,6 @@
   };
   const hue = (str) => { let h = 0; for (const ch of String(str || '')) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
   const safeSrc = (u) => (typeof u === 'string' && (u.startsWith('/uploads/') || /^(assets\/|[\w.-]+\.(png|jpe?g|webp|gif|svg)$)/i.test(u))) ? u : '';
-  const safeUrl = (u) => (typeof u === 'string' && /^https?:\/\//i.test(u)) ? u : '';
   const telegramUrl = (u) => {
     try {
       const parsed = new URL(u);
@@ -26,87 +25,18 @@
   const buzz = (ms = 12) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* ignore */ } };
   const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 
-  // Безпечний «мікро-форматер» для тексту заходів: екранує все, дозволяє **жирний**, посилання, переноси рядків
-  function rich(text) {
-    let h = esc(text);
-    h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    h = h.replace(/https?:\/\/(?:(?!&quot;|&#39;|&lt;|&gt;)\S)+/g, (m) => {
-      const tail = (m.match(/[.,;:!?)\]]+$/) || [''])[0];
-      const url = tail ? m.slice(0, -tail.length) : m;
-      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${tail}`;
-    });
-    return h.replace(/\n/g, '<br>');
-  }
-
   const UA_TRANSLIT = { а: 'a', б: 'b', в: 'v', г: 'h', ґ: 'g', д: 'd', е: 'e', є: 'ye', ж: 'zh', з: 'z', и: 'y', і: 'i', ї: 'yi', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ь: '', ю: 'yu', я: 'ya', "'": '', ʼ: '' };
   const translit = (s) => String(s).toLowerCase().split('').map((c) => (UA_TRANSLIT[c] !== undefined ? UA_TRANSLIT[c] : c)).join('').replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 20);
 
-  /* ───────────── дати й заходи ───────────── */
-  const MONTHS_SHORT = ['січ', 'лют', 'бер', 'кві', 'тра', 'чер', 'лип', 'сер', 'вер', 'жов', 'лис', 'гру'];
+  /* ───────────── дати ───────────── */
   const MONTHS_LONG = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
-  const DOW = ['НД', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
-  const DOW_LONG = ['неділя', 'понеділок', 'вівторок', 'середа', 'четвер', "пʼятниця", 'субота'];
-  const CATS = {
-    meetup: { emoji: '🤝', label: 'Зустріч', color: 'var(--sky)' },
-    workshop: { emoji: '🛠', label: 'Майстер-клас', color: 'var(--lavender)' },
-    party: { emoji: '🎉', label: 'Івент', color: 'var(--pink)' },
-    charity: { emoji: '💛', label: 'Волонтерство', color: 'var(--yellow)' },
-    online: { emoji: '💻', label: 'Онлайн', color: 'var(--mint)' },
-    other: { emoji: '✨', label: 'Інше', color: 'var(--peach)' },
-  };
-  const pad = (n) => String(n).padStart(2, '0');
-  const isDateOnly = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
-  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  function evDate(e) {
-    if (!e.date) return null;
-    const d = isDateOnly(e.date) ? new Date(e.date + 'T00:00') : new Date(e.date);
-    return Number.isNaN(d.getTime()) ? null : d;
-  }
-  function evEnd(e) { const d = evDate(e); return d ? new Date(d.getTime() + (isDateOnly(e.date) ? 24 * 36e5 : 3 * 36e5)) : null; }
-  function evState(e) {
-    const s = evDate(e); if (!s) return 'upcoming';
-    const now = new Date();
-    if (now > evEnd(e)) return 'past';
-    return now >= s ? 'live' : 'upcoming';
-  }
-  function evTime(e) { const d = evDate(e); return d && !isDateOnly(e.date) ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : ''; }
-  function fmtLong(e) {
-    const d = evDate(e); if (!d) return 'Дата уточнюється';
-    const t = evTime(e);
-    return `${DOW_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS_LONG[d.getMonth()]}${t ? ' · ' + t : ''}`;
-  }
-  function until(e) {
-    const s = evDate(e); if (!s) return 'Дата уточнюється';
-    const st = evState(e);
-    if (st === 'live') return 'Триває зараз';
-    if (st === 'past') return 'Вже відбувся';
-    const now = new Date();
-    const mins = Math.round((s - now) / 60000);
-    if (!isDateOnly(e.date) && mins < 60) return `Через ${Math.max(mins, 1)} хв`;
-    const dd = Math.round((startOfDay(s) - startOfDay(now)) / 86400000);
-    if (dd === 0) return isDateOnly(e.date) ? 'Сьогодні' : `Сьогодні — через ${Math.floor(mins / 60)} год`;
-    if (dd === 1) return 'Завтра';
-    return `Через ${dd} ${plural(dd, 'день', 'дні', 'днів')}`;
-  }
-  const cmpDate = (a, b) => { const x = evDate(a); const y = evDate(b); if (x && y) return x - y; if (x) return -1; if (y) return 1; return 0; };
-  function groupedEvents() {
-    const up = []; const past = [];
-    for (const e of S.events) (evState(e) === 'past' ? past : up).push(e);
-    up.sort((a, b) => (Number(b.pinned) - Number(a.pinned)) || cmpDate(a, b));
-    past.sort((a, b) => cmpDate(b, a));
-    return { up, past };
-  }
-  function nextEvent() {
-    const { up } = groupedEvents();
-    return up.filter((e) => evDate(e)).sort(cmpDate)[0] || up[0] || null;
-  }
 
   /* ───────────── стан ───────────── */
   const S = {
-    me: null, cards: [], letters: [], memes: [], events: [], telegramPosts: [], telegramTotal: 0, telegramConfigured: false,
-    stats: { people: 0, stories: 0, letters: 0, memes: 0, events: 0 },
+    me: null, cards: [], letters: [], memes: [], telegramPosts: [], telegramTotal: 0, telegramConfigured: false,
+    stats: { people: 0, stories: 0, letters: 0, memes: 0 },
     shown: { cards: 8, letters: 6, memes: 6 },
-    eventFilter: 'upcoming', photos: { story: null, meme: null },
+    photos: { story: null, meme: null },
     avatarDraft: { state: 'keep', data: null },
     extra: { cards: {}, memes: {} },
     modal: null, loaded: false, loadError: false, sig: '',
@@ -188,7 +118,7 @@
 
   let modalPushed = false;
   const setHash = (h) => history.replaceState(history.state, '', h);
-  const clearModalHash = () => { if (/^#(event|u)\//.test(location.hash)) setHash(location.pathname + location.search); };
+  const clearModalHash = () => { if (/^#u\//.test(location.hash)) setHash(location.pathname + location.search); };
 
   function openModal(html, { cls = '' } = {}) {
     if (!overlay.classList.contains('open')) {
@@ -301,59 +231,7 @@
     $$('[data-stat]').forEach((el) => animateCount(el, Number(S.stats[el.dataset.stat] || 0)));
   }
 
-  /* ───────────── рендер: заходи ───────────── */
-  function ticketHTML(e, i, nextId) {
-    const st = evState(e); const cat = CATS[e.category] || CATS.other; const d = evDate(e); const t = evTime(e);
-    const stub = d
-      ? `<span class="stub-dow">${DOW[d.getDay()]}</span><span class="stub-day">${d.getDate()}</span><span class="stub-mon">${MONTHS_SHORT[d.getMonth()]}</span>${t ? `<span class="stub-time">${t}</span>` : ''}`
-      : '<span class="stub-soon">✨</span><span class="stub-mon">скоро</span>';
-    const ribbons = [
-      st === 'live' ? '<span class="ribbon live">Зараз</span>' : '',
-      st === 'past' ? '<span class="ribbon past">Минув</span>' : '',
-      st !== 'past' && e.id === nextId ? '<span class="ribbon">Найближчий</span>' : '',
-      e.pinned && st !== 'past' ? '<span class="ribbon pin">📌 Закріплено</span>' : '',
-    ].join('');
-    const cover = safeSrc(e.cover) ? `<div class="ticket-cover"><img src="${esc(safeSrc(e.cover))}" alt="" loading="lazy" data-fallback="hide-parent"></div>` : '';
-    const action = st === 'past' ? '' : `<button type="button" class="go-btn ${e.goingMe ? 'on' : ''}" data-action="going" data-id="${esc(e.id)}">${e.goingMe ? '✓ Ти йдеш' : 'Піду'}</button>`;
-    return `<div class="ticket-wrap" style="--i:${i}">
-      <div class="ticket ${st === 'past' ? 'past' : ''}" style="--c:${cat.color}" role="button" tabindex="0" data-action="event" data-id="${esc(e.id)}" aria-label="${esc(e.title)}">
-        <div class="ticket-stub">${stub}</div>
-        <div class="ticket-main">${cover}
-          <div class="ticket-body">
-            <div class="ticket-top"><span class="ticket-cat">${cat.emoji} ${cat.label}</span>${ribbons}</div>
-            <h3 class="ticket-title">${esc(e.title)}</h3>
-            <div class="ticket-meta">${e.place ? `<span>📍 ${esc(e.place)}</span>` : ''}<span>⏳ ${until(e)}</span></div>
-            <div class="ticket-text">${rich(e.text)}</div>
-            <div class="ticket-foot">${action}<span class="going-count" data-going-count="${esc(e.id)}">${e.going ? `👥 ${e.going}` : ''}</span><span class="read-more">Детальніше →</span></div>
-          </div>
-        </div>
-      </div></div>`;
-  }
-
-  function renderEvents() {
-    const grid = $('#events-grid'); if (!grid) return;
-    const { up, past } = groupedEvents();
-    const badge = $('#nav-events-badge');
-    if (badge) { badge.textContent = up.length; badge.hidden = up.length === 0; }
-    const dot = $('#bn-events-dot'); if (dot) dot.hidden = up.length === 0;
-    renderHeroNext();
-    if (!S.loaded) { grid.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>'; return; }
-    if (S.loadError && !S.events.length) {
-      grid.innerHTML = '<div class="events-empty"><span class="big">📡</span><h3>Не вдалося завантажити заходи</h3><p>Перевір інтернет і спробуй ще раз.</p><button class="publish-btn" data-action="reload">Спробувати ще</button></div>';
-      return;
-    }
-    const list = S.eventFilter === 'past' ? past : S.eventFilter === 'all' ? [...up, ...past] : up;
-    if (!list.length) {
-      const msg = S.eventFilter === 'past' ? ['🗂', 'Минулих заходів поки немає', 'Тут зберігатиметься історія наших зустрічей.']
-        : ['🎟', 'Скоро тут зʼявляться заходи', 'Ми готуємо щось класне. Підпишись на Instagram, щоб не пропустити анонс.'];
-      grid.innerHTML = `<div class="events-empty"><span class="big">${msg[0]}</span><h3>${msg[1]}</h3><p>${msg[2]}</p>
-        <a class="publish-btn ok" style="display:inline-block;text-decoration:none" href="https://www.instagram.com/poshtokratia?igsh=MXJ1d3U2aXRjdGlkNg==" target="_blank" rel="noopener noreferrer">Підписатись у Instagram</a></div>`;
-      return;
-    }
-    const next = nextEvent();
-    grid.innerHTML = list.map((e, i) => ticketHTML(e, i, next && next.id)).join('');
-  }
-
+  /* ───────────── рендер: Telegram ───────────── */
   function renderTelegramPosts() {
     const grid = $('#telegram-posts'); if (!grid) return;
     if (!S.loaded) { grid.innerHTML = skeletons(3); return; }
@@ -385,15 +263,6 @@
     const more = $('#telegram-more');
     more.hidden = S.telegramPosts.length >= S.telegramTotal;
     more.textContent = `Показати ще (${Math.max(S.telegramTotal - S.telegramPosts.length, 0)})`;
-  }
-
-  function renderHeroNext() {
-    const el = $('#hero-next'); if (!el) return;
-    const e = S.loaded ? nextEvent() : null;
-    if (!e || evState(e) === 'past') { el.hidden = true; return; }
-    const cat = CATS[e.category] || CATS.other;
-    el.hidden = false;
-    el.innerHTML = `<span style="font-size:22px">${cat.emoji}</span><span><b>${evState(e) === 'live' ? 'Зараз:' : 'Найближчий:'}</b> ${esc(e.title)}<br><small style="color:var(--muted);font-weight:700">${esc(fmtLong(e))} · ${until(e)}</small></span>`;
   }
 
   /* ───────────── рендер: історії, листи, меми ───────────── */
@@ -478,7 +347,7 @@
   }
 
   function renderAll() {
-    renderAuth(); renderStats(); renderEvents(); renderTelegramPosts(); renderPeople(); renderCards(); renderLetters(); renderMemes();
+    renderAuth(); renderStats(); renderTelegramPosts(); renderPeople(); renderCards(); renderLetters(); renderMemes();
   }
 
   /* ───────────── завантаження даних ───────────── */
@@ -500,8 +369,10 @@
     }
   }
   async function loadData() {
-    const [st, ev, pp, tg] = await Promise.all([api('/state'), api('/events'), api('/people').catch(() => ({ people: [] })), api('/telegram')]);
-    S.cards = st.cards; S.letters = st.letters; S.memes = st.memes; S.stats = st.stats; S.events = ev.events; S.people = pp.people;
+    const [st, pp, tg] = await Promise.all([api('/state'), api('/people').catch(() => ({ people: [] })), api('/telegram')]);
+    S.cards = st.cards; S.letters = st.letters; S.memes = st.memes;
+    S.stats = { people: st.stats.people, stories: st.stats.stories, letters: st.stats.letters, memes: st.stats.memes };
+    S.people = pp.people;
     S.telegramPosts = tg.posts; S.telegramTotal = tg.total; S.telegramConfigured = tg.configured;
   }
   async function loadMoreTelegram(btn) {
@@ -523,7 +394,7 @@
     try {
       await loadData();
       S.loadError = false;
-      const sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.telegramPosts, S.telegramConfigured, S.me && S.me.username, S.me && S.me.following]);
+      const sig = JSON.stringify([S.cards, S.letters, S.memes, S.stats, S.people, S.telegramPosts, S.telegramConfigured, S.me && S.me.username, S.me && S.me.following]);
       if (silent && sig === S.sig) return;
       S.sig = sig;
       renderAll();
@@ -544,7 +415,7 @@
     clearTimeout(slow);
     $('#net-banner').classList.remove('show');
     S.loaded = true;
-    S.sig = JSON.stringify([S.cards, S.letters, S.memes, S.events, S.stats, S.people, S.telegramPosts, S.telegramConfigured, S.me && S.me.username, S.me && S.me.following]);
+    S.sig = JSON.stringify([S.cards, S.letters, S.memes, S.stats, S.people, S.telegramPosts, S.telegramConfigured, S.me && S.me.username, S.me && S.me.following]);
     renderAll();
     if (S.loadError) toast('Не вдалося завантажити дані сайту', 'error');
     setTimeout(() => document.body.classList.add('ready'), 1400);
@@ -563,8 +434,7 @@
   function openFromHash() {
     const h = decodeURIComponent(location.hash.slice(1));
     if (!h) return;
-    if (h.startsWith('event/')) openEvent(h.slice(6), false);
-    else if (h.startsWith('u/')) openUser(h.slice(2));
+    if (h.startsWith('u/')) openUser(h.slice(2));
     else if (document.getElementById(h)) setTimeout(() => scrollToId(h), 200);
   }
 
@@ -965,84 +835,6 @@
     } catch (e) { toast(e.message, 'error'); }
   }
 
-  /* ───────────── заходи: модалка, RSVP, календар ───────────── */
-  function openEvent(id, push = true) {
-    const e = S.events.find((x) => x.id === id);
-    if (!e) { toast('Цей захід більше недоступний', 'error'); return; }
-    const st = evState(e); const cat = CATS[e.category] || CATS.other;
-    S.modal = { type: 'event', id };
-    const link = safeUrl(e.link);
-    openModal(`
-      ${safeSrc(e.cover) ? `<div class="ev-cover"><img src="${esc(safeSrc(e.cover))}" alt="" data-fallback="hide-parent"></div>` : ''}
-      <div class="ticket-top" style="margin-bottom:10px"><span class="ticket-cat" style="--c:${cat.color}">${cat.emoji} ${cat.label}</span>
-        ${st === 'live' ? '<span class="ribbon live">Зараз</span>' : ''}${st === 'past' ? '<span class="ribbon past">Минув</span>' : ''}${e.pinned && st !== 'past' ? '<span class="ribbon pin">📌 Закріплено</span>' : ''}</div>
-      <div class="modal-title">${esc(e.title)}</div>
-      <div class="ev-info">
-        <div>🗓 ${esc(fmtLong(e))} <span style="color:var(--red)">· ${until(e)}</span></div>
-        ${e.place ? `<div>📍 ${esc(e.place)}</div>` : ''}
-        <div>👥 <span data-going-count="${esc(e.id)}">${e.going ? `${e.going} ${plural(e.going, 'учасник йде', 'учасники йдуть', 'учасників йдуть')}` : 'Будь першим, хто піде'}</span></div>
-      </div>
-      <div class="ev-text">${rich(e.text)}</div>
-      <div class="ev-actions">
-        ${st !== 'past' ? `<button class="go-btn ${e.goingMe ? 'on' : ''}" style="padding:13px 24px;font-size:13px" data-action="going" data-id="${esc(e.id)}">${e.goingMe ? '✓ Ти йдеш' : 'Піду'}</button>` : ''}
-        ${link ? `<a class="publish-btn ok" style="text-decoration:none;display:inline-block" href="${esc(link)}" target="_blank" rel="noopener noreferrer">Деталі / реєстрація ↗</a>` : ''}
-        ${evDate(e) && st !== 'past' ? `<button class="ghost-btn" data-action="ics" data-id="${esc(e.id)}">📅 У календар</button>` : ''}
-        <button class="ghost-btn" data-action="share" data-id="${esc(e.id)}">🔗 Поділитись</button>
-      </div>`, { cls: 'modal-wide' });
-    if (push) setHash('#event/' + e.id);
-  }
-
-  function syncGoing(e) {
-    $$(`.go-btn[data-id="${e.id}"]`).forEach((b) => { b.classList.toggle('on', e.goingMe); b.textContent = e.goingMe ? '✓ Ти йдеш' : 'Піду'; });
-    $$(`[data-going-count="${e.id}"]`).forEach((el) => {
-      const inModal = !!el.closest('#modal-content');
-      el.textContent = inModal ? (e.going ? `${e.going} ${plural(e.going, 'учасник йде', 'учасники йдуть', 'учасників йдуть')}` : 'Будь першим, хто піде') : (e.going ? `👥 ${e.going}` : '');
-    });
-  }
-
-  async function going(btn) {
-    if (!S.me) { toast('Увійди, щоб відмітити, що ти йдеш 🎟'); authModal('login'); return; }
-    await busy(btn, async () => {
-      try {
-        const d = await api(`/events/${btn.dataset.id}/going`, { method: 'POST' });
-        const i = S.events.findIndex((x) => x.id === d.event.id);
-        if (i >= 0) S.events[i] = d.event;
-        syncGoing(d.event);
-        if (d.event.goingMe) { toast('Чудово, до зустрічі! 🎉', 'success'); confetti(60); buzz([15, 40, 15]); }
-      } catch (e) { toast(e.message, 'error'); }
-    });
-  }
-
-  function downloadICS(id) {
-    const e = S.events.find((x) => x.id === id); const d = e && evDate(e); if (!d) return;
-    const f = (x) => `${x.getFullYear()}${pad(x.getMonth() + 1)}${pad(x.getDate())}`;
-    const ft = (x) => `${f(x)}T${pad(x.getHours())}${pad(x.getMinutes())}00`;
-    const ic = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
-    const dateOnly = isDateOnly(e.date);
-    const end = dateOnly ? new Date(d.getTime() + 864e5) : new Date(d.getTime() + 2 * 36e5);
-    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Zalizna Zmina//UA', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT',
-      `UID:${e.id}@zalizna-zmina`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '')}`,
-      dateOnly ? `DTSTART;VALUE=DATE:${f(d)}` : `DTSTART:${ft(d)}`, dateOnly ? `DTEND;VALUE=DATE:${f(end)}` : `DTEND:${ft(end)}`,
-      `SUMMARY:${ic(e.title)}`, `LOCATION:${ic(e.place)}`, `DESCRIPTION:${ic(e.text.slice(0, 600))}\\n${location.origin}/#event/${e.id}`, 'END:VEVENT', 'END:VCALENDAR'];
-    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'zalizna-zmina-event.ics';
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-    toast('Подію збережено — відкрий файл, щоб додати в календар', 'success');
-  }
-
-  async function copyText(t) {
-    try { await navigator.clipboard.writeText(t); return true; } catch (e) {
-      const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (er) { ok = false; } ta.remove(); return ok;
-    }
-  }
-  async function shareEvent(id) {
-    const e = S.events.find((x) => x.id === id); if (!e) return;
-    const url = `${location.origin}/#event/${e.id}`;
-    if (navigator.share) { try { await navigator.share({ title: e.title, text: `${e.title} — Poshtokratia`, url }); return; } catch (er) { if (er && er.name === 'AbortError') return; } }
-    toast((await copyText(url)) ? 'Посилання скопійовано 🔗' : url, 'success');
-  }
-
   /* ───────────── делегування подій ───────────── */
   const actions = {
     go: (id) => scrollToId(id),
@@ -1062,15 +854,9 @@
     user: (_, el) => openUser(el.dataset.username),
     story: (_, el) => openStory(el.dataset.id),
     meme: (_, el) => openMeme(el.dataset.id),
-    event: (_, el) => openEvent(el.dataset.id),
-    'event-next'() { const e = nextEvent(); if (e) openEvent(e.id); },
-    going: (_, el) => going(el),
-    ics: (_, el) => downloadICS(el.dataset.id),
-    share: (_, el) => shareEvent(el.dataset.id),
     like: (_, el) => like(el),
     delete: (_, el) => deleteItem(el.dataset.kind, el.dataset.id),
     more(kind) { S.shown[kind] += kind === 'cards' ? 8 : 6; ({ cards: renderCards, letters: renderLetters, memes: renderMemes })[kind](); },
-    filter(f) { S.eventFilter = f; $$('#event-filters .chip').forEach((c) => c.classList.toggle('active', c.dataset.action === 'filter:' + f)); renderEvents(); },
     anon() {
       S.modal = { type: 'anon' };
       openModal(`<div class="modal-title">✉ Анонімний лист</div>
@@ -1091,7 +877,6 @@
           <div><label class="form-label" for="report-details">Деталі (необов’язково)</label><textarea class="form-textarea" id="report-details" name="details" maxlength="500" placeholder="Коротко поясни звернення"></textarea></div>
           <div class="form-error" role="alert"></div><button class="publish-btn" type="submit">Надіслати скаргу</button></div></form>`);
     },
-    join() { if (S.me) scrollToId('section-events'); else authModal('register'); },
     toast: (msg) => toast(msg),
     zoom: (_, el) => openLightbox(el.dataset.src),
     'close-modal': () => closeModal(),
@@ -1282,8 +1067,7 @@
   setupObservers();
   updateCounters();
   bootstrap();
-  setInterval(() => { if (!document.hidden && S.loaded) { renderEvents(); } }, 60 * 1000);          // оновлюємо відлік «через N днів»
-  setInterval(() => { if (!document.hidden && S.loaded) refreshData({ silent: true }); }, 45 * 1000); // нові заходи зʼявляються без перезавантаження
+  setInterval(() => { if (!document.hidden && S.loaded) refreshData({ silent: true }); }, 45 * 1000);
   setInterval(() => { if (!document.hidden && S.loaded) refreshNotificationCount(); }, 45 * 1000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && S.loaded) { refreshData({ silent: true }); refreshNotificationCount(); }

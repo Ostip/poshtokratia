@@ -1,7 +1,7 @@
 {
   "name": "Poshtokratia",
   "short_name": "Poshtokratia",
-  "description": "Історії, листи, меми та заходи спільноти Poshtokratia",
+  "description": "Історії, листи, меми та публікації з Telegram-каналу Poshtokratia",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -15,6 +15,6 @@
     { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Заходи", "url": "/#section-events", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Канал", "url": "/#section-telegram", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
   ]
 }

@@ -1,6 +1,6 @@
 /* Сервіс-воркер Poshtokratia: швидкий старт і запасний екран без інтернету.
    API і адмінка ніколи не кешуються. */
-const VERSION = 'zz-v3';
+const VERSION = 'zz-v4';
 const SHELL = ['/', '/style.css', '/app.js', '/manifest.webmanifest', '/icon-192.png'];
 
 self.addEventListener('install', (e) => {

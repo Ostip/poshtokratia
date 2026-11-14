@@ -2,7 +2,7 @@
   "name": "poshtokratia",
   "version": "2.1.0",
   "private": true,
-  "description": "Poshtokratia: акаунти, історії, листи, меми та заходи",
+  "description": "Poshtokratia: спільнота для історій, листів, мемів і публікацій з Telegram",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
