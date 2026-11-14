@@ -126,7 +126,7 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
   <div class="login-card">
     <div class="logo">P</div>
     <h1>Студія Poshtokratia</h1>
-    <p>Тут ти додаєш заходи — і вони одразу зʼявляються на сайті.</p>
+    <p>Тут керуєш записами заходів для внутрішнього обліку. Публічні анонси публікуй у Telegram-каналі Poshtokratia.</p>
     <form id="login-form">
       <div><label class="lbl" for="key">Ключ адміністратора</label><input id="key" type="password" autocomplete="current-password" placeholder="Твій ключ (ADMIN_PASSWORD)" autofocus></div>
       <button class="btn" type="submit" id="login-btn">Увійти в студію →</button>
@@ -155,7 +155,7 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
       <div class="studio">
         <div class="card">
           <h2 id="form-title">Новий захід</h2>
-          <p class="sub">Встав текст просто зі смайликами — так, як написав би в Telegram. Він зʼявиться на сайті у розділі «Заходи».</p>
+          <p class="sub">Зберігай інформацію про захід у студії. Ці записи не відображаються в публічній стрічці сайту — для анонсів використовуй Telegram.</p>
           <form class="form" id="ev-form" novalidate>
             <div>
               <label class="lbl">Текст про захід</label>
@@ -204,7 +204,7 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
       </div>
 
       <div style="margin-top:26px">
-        <h2>Усі заходи</h2><p class="sub">Редагуй, ховай у чернетки, дублюй або видаляй.</p>
+        <h2>Записи заходів</h2><p class="sub">Редагуй, ховай у чернетки, дублюй або видаляй внутрішні записи.</p>
         <div class="list" id="ev-list"></div>
       </div>
     </section>
@@ -520,7 +520,7 @@ button,a,input,select,textarea,summary,label{touch-action:manipulation}
   $('#people-list').addEventListener('click', (e) => { const b = e.target.closest('button[data-user]'); if (b) del('/admin/users/' + b.dataset.user, `Видалити користувача «${b.dataset.name}» разом з усіма його історіями й мемами?`); });
   function renderOverview() {
     const d = S.data; const pub = d.events.filter((e) => e.status === 'published').length; const going = d.events.reduce((s, e) => s + e.going, 0);
-    $('#stats').innerHTML = [['👥', d.users.length, 'людей'], ['📖', d.cards.length, 'історій'], ['✉️', d.letters.length, 'листів'], ['😂', d.memes.length, 'мемів'], ['🎟', pub, 'заходів на сайті'], ['📝', d.events.length - pub, 'чернеток'], ['🙋', going, 'відміток «Піду»']]
+    $('#stats').innerHTML = [['👥', d.users.length, 'людей'], ['📖', d.cards.length, 'історій'], ['✉️', d.letters.length, 'листів'], ['😂', d.memes.length, 'мемів'], ['🎟', pub, 'опублікованих записів'], ['📝', d.events.length - pub, 'чернеток'], ['🙋', going, 'відміток «Піду»']]
       .map((s) => `<div class="stat">${s[0]}<b>${s[1]}</b><span>${s[2]}</span></div>`).join('');
   }
 

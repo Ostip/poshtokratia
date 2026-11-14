@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Poshtokratia — історії, листи та заходи</title>
-  <meta name="description" content="Poshtokratia — простір для історій, листів, мемів і заходів спільноти." />
+  <title>Poshtokratia — історії, листи та спільнота</title>
+  <meta name="description" content="Poshtokratia — спільнота для історій, листів, мемів і нових дописів із Telegram." />
   <meta name="theme-color" content="#b7001d" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -13,7 +13,7 @@
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta property="og:title" content="Poshtokratia" />
-  <meta property="og:description" content="Історії, листи, меми та заходи спільноти." />
+  <meta property="og:description" content="Історії, листи, меми та нові дописи з Telegram-каналу Poshtokratia." />
   <meta property="og:type" content="website" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23d0021b'/%3E%3Ctext x='50' y='70' font-size='62' text-anchor='middle' fill='%23ffd93d' font-family='Arial' font-weight='900'%3EP%3C/text%3E%3C/svg%3E" />
   <script>document.documentElement.classList.add('js');</script>
@@ -41,7 +41,7 @@
       <div class="sticker-247"><div class="big">P</div><div class="small">ПОШТА<br>СПІЛЬНОТИ</div></div>
       <div class="ad-strip">ІСТОРІЇ СПІЛЬНОТИ</div>
       <div class="ad-strip">ЛИСТИ ТА МЕМИ</div>
-      <div class="ad-strip">АФІША ЗАХОДІВ</div>
+      <div class="ad-strip">ДОПИСИ З TELEGRAM</div>
       <div class="ad-strip">ДОЛУЧАЙСЯ ДО POSHTOKRATIA</div>
       <div class="qr-block">
         <a href="https://www.instagram.com/poshtokratia?igsh=MXJ1d3U2aXRjdGlkNg==" target="_blank" rel="noopener noreferrer" aria-label="Перейти в Instagram">
@@ -61,7 +61,6 @@
         <div class="nav-divider"></div>
         <div class="nav-buttons" id="nav-buttons">
           <button class="nav-btn" data-action="go:section-hero" data-nav="section-hero"><span class="indicator ind-yellow"></span> Комірки</button>
-          <button class="nav-btn nav-btn-events" data-action="go:section-events" data-nav="section-events"><span class="indicator ind-red"></span> Заходи <span class="nav-badge" id="nav-events-badge" hidden>0</span></button>
           <button class="nav-btn" data-action="go:section-komirka" data-nav="section-komirka"><span class="indicator ind-blue"></span> Історії</button>
           <button class="nav-btn" data-action="go:section-mail" data-nav="section-mail"><span class="indicator ind-green"></span> Пошта</button>
           <button class="nav-btn" data-action="go:section-telegram" data-nav="section-telegram"><span class="indicator ind-blue"></span> Telegram</button>
@@ -76,8 +75,8 @@
         <!-- ticker -->
         <div class="ticker" aria-hidden="true">
           <div class="ticker-track">
-            <span>★ ІСТОРІЇ СПІЛЬНОТИ</span><span>🎟 ЗАХОДИ ВЖЕ НА САЙТІ</span><span>★ ЛИСТИ ТА МЕМИ</span><span>💌 ПИШИ ЛИСТИ</span><span>★ АФІША ЗАХОДІВ</span><span>😂 ДІЛИСЬ МЕМАМИ</span>
-            <span>★ ІСТОРІЇ СПІЛЬНОТИ</span><span>🎟 ЗАХОДИ ВЖЕ НА САЙТІ</span><span>★ ЛИСТИ ТА МЕМИ</span><span>💌 ПИШИ ЛИСТИ</span><span>★ АФІША ЗАХОДІВ</span><span>😂 ДІЛИСЬ МЕМАМИ</span>
+            <span>★ ІСТОРІЇ СПІЛЬНОТИ</span><span>✈️ ДОПИСИ З TELEGRAM</span><span>★ ЛИСТИ ТА МЕМИ</span><span>💌 ПИШИ ЛИСТИ</span><span>★ POSHTOKRATIA</span><span>😂 ДІЛИСЬ МЕМАМИ</span>
+            <span>★ ІСТОРІЇ СПІЛЬНОТИ</span><span>✈️ ДОПИСИ З TELEGRAM</span><span>★ ЛИСТИ ТА МЕМИ</span><span>💌 ПИШИ ЛИСТИ</span><span>★ POSHTOKRATIA</span><span>😂 ДІЛИСЬ МЕМАМИ</span>
           </div>
         </div>
 
@@ -86,28 +85,25 @@
           <div class="hero-left">
             <div class="hero-kicker">Спільнота «Залізна Зміна»</div>
             <h1 class="hero-logo">Poshtokratia</h1>
-            <p class="hero-tagline">Історії, листи, меми та заходи спільноти.</p>
+            <p class="hero-tagline">Спільнота для історій, листів, мемів і дописів із Telegram.</p>
             <div class="hero-cta">
               <button class="hero-btn" data-action="locker">Відкрити свою комірку &rarr;</button>
-              <button class="hero-btn hero-btn-ghost" data-action="go:section-events">🎟 Заходи</button>
             </div>
-            <button class="hero-next" id="hero-next" data-action="event-next" hidden></button>
             <div class="hero-stats" id="hero-stats">
               <div class="stat"><b data-stat="people">0</b><span>людей</span></div>
               <div class="stat"><b data-stat="stories">0</b><span>історій</span></div>
               <div class="stat"><b data-stat="memes">0</b><span>мемів</span></div>
-              <div class="stat"><b data-stat="events">0</b><span>заходів</span></div>
             </div>
           </div>
 
           <div class="hero-right">
             <div class="hero-visual">
-              <div class="deco-sticker">ІСТОРІЇ · ЛИСТИ · ЗАХОДИ</div>
-              <div class="float f1">💛</div><div class="float f2">✨</div><div class="float f3">🎟</div>
+              <div class="deco-sticker">ІСТОРІЇ · ЛИСТИ · POSHTOKRATIA</div>
+              <div class="float f1">💛</div><div class="float f2">✨</div><div class="float f3">✈️</div>
               <div class="locker-grid">
                 <button class="locker-cell cell-yellow" data-action="go:section-komirka"><span class="cell-num">01</span><span class="cell-icon">📖</span><span class="cell-label">Історії</span></button>
                 <button class="locker-cell cell-sky" data-action="go:section-mail"><span class="cell-num">02</span><span class="cell-icon">✉️</span><span class="cell-label">Пошта</span></button>
-                <button class="locker-cell cell-pink cell-new" data-action="go:section-events"><span class="cell-num">03</span><span class="cell-icon">🎟</span><span class="cell-label">Заходи</span><span class="new-tag">NEW</span></button>
+                <button class="locker-cell cell-pink" data-action="go:section-telegram"><span class="cell-num">03</span><span class="cell-icon">✈️</span><span class="cell-label">Telegram</span></button>
                 <button class="locker-cell cell-mint" data-action="go:section-memes"><span class="cell-num">04</span><span class="cell-icon">😂</span><span class="cell-label">Меми</span></button>
                 <button class="locker-cell cell-peach" data-action="locker"><span class="cell-num">05</span><span class="cell-icon">❤️</span><span class="cell-label">Моя комірка</span></button>
                 <button class="locker-cell cell-lav" data-action="go:section-komanda"><span class="cell-num">06</span><span class="cell-icon">👑</span><span class="cell-label">Команда</span></button>
@@ -116,29 +112,12 @@
           </div>
         </section>
 
-        <!-- ═══ ЗАХОДИ ═══ -->
-        <section class="section reveal" id="section-events">
-          <div class="section-head">
-            <div>
-              <div class="eyebrow">🎟 Афіша</div>
-              <h2 class="section-title">Заходи</h2>
-              <p class="section-sub">Зустрічі, майстер-класи та інші заходи спільноти. Натисни «Піду» — і додай захід у свій календар.</p>
-            </div>
-            <div class="chips" id="event-filters" role="group" aria-label="Фільтр заходів">
-              <button class="chip active" data-action="filter:upcoming">Найближчі</button>
-              <button class="chip" data-action="filter:all">Усі</button>
-              <button class="chip" data-action="filter:past">Минулі</button>
-            </div>
-          </div>
-          <div class="events-grid" id="events-grid"></div>
-        </section>
-
         <section class="section reveal" id="section-telegram">
           <div class="section-head">
             <div>
               <div class="eyebrow">✈️ Оновлення спільноти</div>
               <h2 class="section-title">З Telegram</h2>
-              <p class="section-sub">Публікації з каналу Poshtokratia з’являються тут після підключення інтеграції.</p>
+              <p class="section-sub">Анонси й інші публікації з каналу Poshtokratia з’являються тут після підключення інтеграції.</p>
             </div>
             <a class="ghost-btn telegram-channel-link" href="https://t.me/poshtokratia" target="_blank" rel="noopener noreferrer">Відкрити канал ↗</a>
           </div>
@@ -153,7 +132,7 @@
             <div class="steps">
               <button class="step-cell cell-yellow" data-action="go:section-komirka"><div class="step-num">01</div><div class="step-name">Ділись</div><div class="step-desc">Напиши свою історію або надішли лист.</div></button>
               <button class="step-cell cell-sky" data-action="go:section-komirka"><div class="step-num">02</div><div class="step-name">Читай</div><div class="step-desc">Відкривай історії інших людей.</div></button>
-              <button class="step-cell cell-lav" data-action="go:section-events"><div class="step-num">03</div><div class="step-name">Приходь</div><div class="step-desc">Заходи, де історії оживають.</div></button>
+              <button class="step-cell cell-lav" data-action="go:section-telegram"><div class="step-num">03</div><div class="step-name">Стеж</div><div class="step-desc">Читайте анонси й новини в Telegram-стрічці.</div></button>
             </div>
           </div>
           <div class="panel-box">
@@ -315,12 +294,12 @@
           </div>
           <div class="team-grid">
             <div class="team-cell cell-yellow">
-              <img class="team-avatar" src="assets/images/CEO.jpg" alt="Марія Морква" data-fallback="avatar" loading="lazy" />
-              <div class="team-name">Марія Морква</div><div class="team-role">SEO & Designer</div>
+              <img class="team-avatar" src="assets/images/CEO.jpg" alt="Марія" data-fallback="avatar" loading="lazy" />
+              <div class="team-name">Марія</div><div class="team-role">Founder &amp; Designer. Візія проєкту, стратегія розвитку, візуальний стиль та весь дизайн, який ви бачите у наших соцмережах.</div>
             </div>
             <div class="team-cell cell-sky">
-              <img class="team-avatar" src="assets/images/indianka.jpg" alt="інДіанка" data-fallback="avatar" loading="lazy" />
-              <div class="team-name">інДіанка</div><div class="team-role">Co-founder & Project Manager</div>
+              <img class="team-avatar" src="assets/images/indianka.jpg" alt="Діана" data-fallback="avatar" loading="lazy" />
+              <div class="team-name">Діана</div><div class="team-role">Co-founder. Права рука, генераторка ідей, стратегічна підтримка та координація ключових процесів.</div>
             </div>
             <div class="team-cell cell-pink">
               <img class="team-avatar" src="assets/images/Ostik.jpg" alt="Остік" data-fallback="avatar" loading="lazy" />
@@ -328,23 +307,23 @@
             </div>
             <div class="team-cell cell-peach">
               <img class="team-avatar" src="assets/images/kristina.jpg" alt="Крістіна" data-fallback="avatar" loading="lazy" />
-              <div class="team-name">Крістіна</div><div class="team-role">Event Manager</div>
+              <div class="team-name">Крістіна</div><div class="team-role">Event Manager. Людина, яка перетворює будь-яку ідею на крутий живий івент — від пошуку локацій та спікерів до ідеального таймінгу.</div>
             </div>
             <div class="team-cell cell-lav">
-              <img class="team-avatar" src="assets/images/ivan.jpg" alt="Іван" data-fallback="avatar" loading="lazy" />
-              <div class="team-name">Ваня</div><div class="team-role">Head of Technical Support</div>
+              <img class="team-avatar" src="assets/images/ivan.jpg" alt="Ваня" data-fallback="avatar" loading="lazy" />
+              <div class="team-name">Ваня</div><div class="team-role">Head of Technical Support &amp; Telegram Lead. Повністю веде наш Telegram-канал і відповідає за те, щоб уся техніка, звук, трансляції та процеси працювали як годинник.</div>
             </div>
             <div class="team-cell cell-mint">
-              <img class="team-avatar" src="assets/images/twelwe.jpg" alt="Анічка" data-fallback="avatar" loading="lazy" />
-              <div class="team-name">Анічка</div><div class="team-role">Head of SMM</div>
+              <img class="team-avatar" src="assets/images/twelwe.jpg" alt="Аня" data-fallback="avatar" loading="lazy" />
+              <div class="team-name">Аня</div><div class="team-role">Ivano-Frankivsk Lead &amp; TikTok. Розвиває наше ком’юніті у Франківську та знімає тіктоки, які постійно залітають у рекомендації.</div>
             </div>
             <div class="team-cell cell-sky">
               <img class="team-avatar" src="assets/images/Vira.png" alt="Віра" data-fallback="avatar" loading="lazy" />
-              <div class="team-name">Віра</div><div class="team-role">Учасниця спільноти</div>
+              <div class="team-name">Віра</div><div class="team-role">Partnerships &amp; Special Projects. Відповідає за наші збори, подкасти, нові формати й представляє Поштократію на різних івентах і в колабораціях.</div>
             </div>
             <div class="team-cell cell-lav">
               <img class="team-avatar" src="assets/images/Teo.jpg" alt="Тео" data-fallback="avatar" loading="lazy" />
-              <div class="team-name">Тео</div><div class="team-role">Учасник спільноти</div>
+              <div class="team-name">Тео</div><div class="team-role">Photographer. Ловить ваші щирі емоції на івентах, робить атмосферні кадри та зберігає найкращі моменти нашої спільноти.</div>
             </div>
           </div>
         </section>
@@ -356,11 +335,11 @@
             <div class="ad-banner-sub">Напиши те, що важко сказати вголос.</div>
             <span class="write-btn">Написати &rarr;</span>
           </button>
-          <button class="ad-banner" data-action="join">
+          <a class="ad-banner" href="https://t.me/poshtokratia" target="_blank" rel="noopener noreferrer">
             <div class="ad-banner-title">⚡ Poshtokratia</div>
             <div class="ad-banner-sub">Спільнота «Залізна Зміна»</div>
             <div class="ad-banner-accent"><div class="sticker-247 mini">СПІЛЬНОТА</div></div>
-          </button>
+          </a>
           <div class="ad-banner ad-static">
             <div class="ad-banner-title">📷 Підписуйся на нас</div>
             <div class="ad-banner-sub">Будь у курсі всіх новин та можливостей.</div>
@@ -390,7 +369,6 @@
 <!-- ══ НИЖНЄ МЕНЮ (смартфони й планшети) ══ -->
 <nav class="bottom-nav" id="bottom-nav" aria-label="Нижня навігація">
   <button data-action="go:section-hero" data-nav="section-hero"><span class="bn-ic">🏠</span><span class="bn-t">Головна</span></button>
-  <button data-action="go:section-events" data-nav="section-events"><span class="bn-ic">🎟<i class="bn-dot" id="bn-events-dot" hidden></i></span><span class="bn-t">Заходи</span></button>
   <button data-action="go:section-komirka" data-nav="section-komirka"><span class="bn-ic">📖</span><span class="bn-t">Історії</span></button>
   <button data-action="go:section-mail" data-nav="section-mail"><span class="bn-ic">✉️</span><span class="bn-t">Пошта</span></button>
   <button data-action="go:section-telegram" data-nav="section-telegram"><span class="bn-ic">✈️</span><span class="bn-t">Канал</span></button>
