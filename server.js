@@ -1210,23 +1210,32 @@ async function configureTelegramWebhook() {
     console.warn('Telegram автопублікація не налаштована: потрібна HTTPS адреса /api/telegram/webhook.');
     return;
   }
-  const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      url: webhookUrl.toString(),
-      secret_token: TELEGRAM_WEBHOOK_SECRET,
-      allowed_updates: ['channel_post', 'edited_channel_post'],
-    }),
-    signal: AbortSignal.timeout(15000),
-  }).catch(() => null);
-  if (!response || !response.ok) {
-    console.error('Не вдалося налаштувати Telegram webhook. Перевір змінні середовища й доступність Telegram API.');
+  let response;
+  try {
+    response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: webhookUrl.toString(),
+        secret_token: TELEGRAM_WEBHOOK_SECRET,
+        allowed_updates: ['channel_post', 'edited_channel_post'],
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (err) {
+    const reason = err && err.name === 'TimeoutError' ? 'timeout' : 'network error';
+    console.error(`Не вдалося зв’язатися з Telegram API (${reason}).`);
     return;
   }
   const result = await response.json().catch(() => null);
-  if (!result || !result.ok) {
-    console.error('Telegram відхилив налаштування webhook. Перевір токен бота й адресу.');
+  if (!response.ok || !result || !result.ok) {
+    const code = result && Number.isInteger(result.error_code) ? result.error_code : response.status;
+    let description = result && typeof result.description === 'string' ? result.description : 'невідома помилка';
+    description = description.replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 300);
+    for (const secret of [TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, webhookUrl.toString()]) {
+      if (secret) description = description.split(secret).join('[приховано]');
+    }
+    console.error(`Telegram не зареєстрував webhook (код ${code}): ${description}`);
     return;
   }
   telegramWebhookReady = true;
